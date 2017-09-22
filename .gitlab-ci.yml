@@ -8,7 +8,7 @@ before_script:
   - apt-get update
   - apt-get install -y python-pip
 
-test:
-  stage: unit_tests
+unit_test:
+  stage: test
   script:
     - python setup.py test
