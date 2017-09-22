@@ -16,7 +16,7 @@ git clone git@gitlab.com:cpoisson/rent-a-bot.git
 Create a virtual env (here using virtualenv wrapper)
 
 ```commandline
-mkvirtualenv ren-t-abot
+mkvirtualenv rent-a-bot
 workon rent-a-bot
 ```
 
