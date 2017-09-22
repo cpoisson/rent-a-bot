@@ -6,7 +6,7 @@ image: ubuntu:xenial
 
 before_script:
   - echo "Fetch rent-a-bot repository"
-  - sudo apt-get install git
+  - apt-get install git
   - git clone git@gitlab.com:cpoisson/rent-a-bot.git
   - cd rent-a-bot
 
