@@ -40,3 +40,18 @@ And... run!
 flask run
 ```
 
+## How to tests
+
+### Tests implementation
+
+http://flask.pocoo.org/docs/0.12/tutorial/testing/
+http://flask.pocoo.org/docs/0.12/testing/#testing
+
+Unit tests are based on py.test framework
+
+### How to run unit tests
+
+```commandline
+python setup.py test
+```
+
