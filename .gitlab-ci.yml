@@ -5,8 +5,10 @@
 image: ubuntu:xenial
 
 before_script:
+  - echo "Install git and pip"
+  - apt-get update
+  - apt-get install -y git python-pip
   - echo "Fetch rent-a-bot repository"
-  - apt-get install git
   - git clone git@gitlab.com:cpoisson/rent-a-bot.git
   - cd rent-a-bot
 
