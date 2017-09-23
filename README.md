@@ -51,14 +51,20 @@ flask run
 
 ### Tests implementation
 
-http://flask.pocoo.org/docs/0.12/tutorial/testing/
-http://flask.pocoo.org/docs/0.12/testing/#testing
-
-Unit tests are based on py.test framework
+Unit tests are done using py.test and coverage
 
 ### How to run unit tests
 
 ```commandline
 python setup.py test
 ```
+
+
+---
+
+## Helpful documentation used to design this application
+
+- [Designing a RESTful API with Python and Flask](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
+- [Testing Flask Applications](http://flask.pocoo.org/docs/0.12/testing/#testing)
+
 
