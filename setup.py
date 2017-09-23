@@ -76,15 +76,15 @@ setup(
     install_requires=['flask'],
 
     setup_requires=['pytest-runner'],
-    tests_require=['pytest', 'coverage'],
+    tests_require=['pytest', 'pytest-cov'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
     extras_require={
-        'dev': ['coverage', 'pytest'],
-        'test': ['pytest', 'coverage'],
+        'dev': ['pytest', 'pytest-cov'],
+        'test': ['pytest', 'pytest-cov'],
     },
 
     # If there are data files included in your packages that need to be
