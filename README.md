@@ -59,7 +59,6 @@ Unit tests are done using py.test and coverage
 python setup.py test
 ```
 
-
 ---
 
 ## Helpful documentation used to design this application
@@ -67,4 +66,5 @@ python setup.py test
 - [Designing a RESTful API with Python and Flask](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
 - [Testing Flask Applications](http://flask.pocoo.org/docs/0.12/testing/#testing)
 - [Flask Project Template](https://github.com/xen/flask-project-template)
+- [Flask SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.1/quickstart/)
 

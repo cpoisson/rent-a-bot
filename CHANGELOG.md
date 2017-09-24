@@ -15,3 +15,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - .gitlab-ci.yml
 - Coverage
 - CI Badges
+- Add Bot Model

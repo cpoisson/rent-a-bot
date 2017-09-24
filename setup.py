@@ -33,7 +33,7 @@ setup(
 
     # Author details
     author='Charles Poisson',
-    author_email='',
+    author_email='charles.poisson(at)gmail.com',
 
     # Choose your license
     license='MIT',
@@ -73,7 +73,8 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['flask'],
+    install_requires=['flask',
+                      'flask-sqlalchemy'],
 
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-cov'],
