@@ -6,7 +6,24 @@
 ---
 
 ## Purpose
-Rent-a-bot, your bot provider.
+
+Rent-a-bot, your automation resource provider.
+
+Exclusive access to a resource is a common problem in automation, rent-a-bot allows you to define a pool of resources 
+and obtain an exclusive access to a given resource.
+
+---
+
+## Resource 
+
+A resource is defined by:
+
+- A Name
+- A Description
+- An end point
+- Tags
+- A state (Disabled, Ready, Busy)
+- A state description
 
 ---
 

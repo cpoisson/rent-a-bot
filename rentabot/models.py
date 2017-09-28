@@ -11,68 +11,40 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
-# TODO: Add BotModel Class, Mandatory to limit bot models possibility
-class BotModel(db.Model):
-    """ BotModel class
+class Resource(db.Model):
+    """ Resource class.
 
-        BotModel class describes the model of a bot model.
-    """
-    id = db.Column(db.Integer, primary_key=True)  # Id
-    model = db.Column(db.String(80), unique=True)  # Unique name
-
-    def __init__(self, model):
-        self.model = model
-
-    @property
-    def dict(self):
-        return { 'model': self.model }
-
-    def __repr__(self):
-        return str(self.dict)
-
-
-class Bot(db.Model):
-    """ Bot class.
-
-        Bot class describes the model of a bot.
     """
     id = db.Column(db.Integer, primary_key=True)            # Id
-    name = db.Column(db.String(80), unique=True)            # Unique name
-    ip_address = db.Column(db.String(80), unique=True)      # IPV4 Address
-    model = db.Column(db.String(160))                       # Bot model
-    status = db.Column(db.Integer)                          # Bot Status
-    status_details = db.Column(db.String(160))              # Bot Status Details
-    ssh_login = db.Column(db.String(80))                    # SSH Login
-    ssh_password = db.Column(db.String(80))                 # SSH Password
-    # TODO: Add secure authentication to bot
+    name = db.Column(db.String(80), unique=True)            # Unique Resource name
+    endpoint = db.Column(db.String(160))                    # Resource endpoint (e.g. an IP address)
+    description = db.Column(db.String(160))                 # Resource description
+    tags = db.Column(db.String(160))                        # Resource tags
+    status = db.Column(db.Integer)                          # Resource Status
+    status_details = db.Column(db.String(160))              # Resource Status Details
 
-    BOT_STATUS = {
-        'disabled': 0,
-        'ready': 1,
-        'busy': 2
-    }
+    RESOURCE_STATUS = {u'available': 0, u'locked': 1}
 
-    def __init__(self, name, ip_address, model, ssh_login, ssh_password):
+    def __init__(self, name, endpoint=None, description=None, tags=None):
         self.name = name
-        self.ip_address = ip_address
-        self.model = model
-        self.status = self.BOT_STATUS['disabled']
-        self.status_details = 'Initialising...'
-        self.ssh_login = ssh_login
-        self.ssh_password = ssh_password
+        self.endpoint = endpoint
+        self.description = description
+        self.tags = tags
+        self.status = self.RESOURCE_STATUS['available']
+        self.status_details = u'Resource available'
 
     @property
     def dict(self):
-        bot = {
+        resource = {
             'id': self.id,
             'name': self.name,
-            'ip_address': self.ip_address,
-            'model': self.model,
+            'endpoint': self.endpoint,
+            'description': self.description,
+            'tags': self.tags,
             'status': self.status,
-            'status_details': self.status_details,
-            'ssh_login': self.ssh_login
+            'status_details': self.status_details
         }
-        return bot
+        return resource
 
     def __repr__(self):
         return str(self.dict)
