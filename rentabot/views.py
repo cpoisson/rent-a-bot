@@ -1,5 +1,5 @@
 from rentabot import app
-from rentabot.models import Bot
+from rentabot.models import Resource
 
 from flask import jsonify
 from flask import abort, make_response
@@ -11,28 +11,28 @@ def index():
     return '<h1>Rent-A-Bot</h1>'
 
 
-def make_public_bot(bot):
-    bot = bot.dict
-    new_bot = dict()
-    for field in bot:
+def make_public_uri(resource):
+    resource = resource.dict
+    new_resource = dict()
+    for field in resource:
         if field == 'id':
-            new_bot['uri'] = url_for('get_bot', bot_id=bot['id'], _external=True)
+            new_resource['uri'] = url_for('get_resource', bot_id=resource['id'], _external=True)
         else:
-            new_bot[field] = bot[field]
-    return new_bot
+            new_resource[field] = resource[field]
+    return new_resource
 
 
-@app.route('/rentabot/api/v1.0/bots', methods=['GET'])
-def get_bots():
-    return jsonify({'bots': map(make_public_bot, Bot.query.all())})
+@app.route('/rentabot/api/v1.0/resources', methods=['GET'])
+def get_resources():
+    return jsonify({'resources': map(make_public_uri, Resource.query.all())})
 
 
-@app.route('/rentabot/api/v1.0/bots/<int:bot_id>', methods=['GET'])
-def get_bot(bot_id):
-    bot = Bot.query.filter_by(id=bot_id).first()
-    if bot is None:
+@app.route('/rentabot/api/v1.0/resources/<int:resource_id>', methods=['GET'])
+def get_resource(resource_id):
+    resource = Resource.query.filter_by(id=resource_id).first()
+    if resource is None:
         abort(404)
-    return jsonify({'bot': bot.dict})
+    return jsonify({'resource': resource.dict})
 
 
 @app.errorhandler(404)

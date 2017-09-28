@@ -1,8 +1,5 @@
 import pytest
 import rentabot
-from rentabot.models import db
-from rentabot.models import Bot
-import json
 
 
 @pytest.fixture
@@ -18,13 +15,13 @@ def test_views_index(app):
 
 
 def test_get_bots_no_bots(app):
-    response = app.get('/rentabot/api/v1.0/bots')
+    response = app.get('/rentabot/api/v1.0/resources')
     if response.status_code != 200:
         pytest.fail("GET bots did not returned 200 but {}".format(response))
 
 
 def test_get_bot_id_bot_doesnt_exist(app):
-    response = app.get('/rentabot/api/v1.0/bots/3000')
+    response = app.get('/rentabot/api/v1.0/ressources/3000')
     if response.status_code != 404:
         pytest.fail("GET bots did not returned 404 but {}".format(response))
 
