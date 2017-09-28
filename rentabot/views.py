@@ -1,14 +1,19 @@
 from rentabot import app
 from rentabot.models import Resource
 
-from flask import jsonify
+from flask import jsonify, request
 from flask import abort, make_response
 from flask import url_for
 
 
+# - [ Web View ] --------------------------------------------------------------
+
 @app.route('/')
 def index():
     return '<h1>Rent-A-Bot</h1>'
+
+
+# - [ API ] ------------------------------------------------------------------
 
 
 def make_public_uri(resource):
@@ -22,6 +27,8 @@ def make_public_uri(resource):
     return new_resource
 
 
+# - [ GET ]
+
 @app.route('/rentabot/api/v1.0/resources', methods=['GET'])
 def get_resources():
     return jsonify({'resources': map(make_public_uri, Resource.query.all())})
@@ -34,6 +41,17 @@ def get_resource(resource_id):
         abort(404)
     return jsonify({'resource': resource.dict})
 
+
+# - [ GET : Acquire / Release resource lock ]
+
+@app.route('/rentabot/api/v1.0/lock', methods=['GET'])
+def lock_resources():
+    arguments = request.args.lists()
+    print arguments
+    return jsonify(arguments)
+
+
+# - [ 404 ]
 
 @app.errorhandler(404)
 def not_found(error):
