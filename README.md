@@ -22,7 +22,7 @@ A resource is defined by:
 - A Description
 - An end point
 - Tags
-- A state (Disabled, Ready, Busy)
+- A state (available or locked)
 - A state description
 
 ---
