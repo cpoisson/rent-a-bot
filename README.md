@@ -84,4 +84,6 @@ python setup.py test
 - [Testing Flask Applications](http://flask.pocoo.org/docs/0.12/testing/#testing)
 - [Flask Project Template](https://github.com/xen/flask-project-template)
 - [Flask SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.1/quickstart/)
-
+- [Put versus Post](https://knpuniversity.com/screencast/rest/put-versus-post)
+- [Best practice for a pragmatic restful API](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api#ssl)
+- [Implementing a RESTful Web API with Python & Flask](http://blog.luisrei.com/articles/flaskrest.html)
