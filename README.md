@@ -1,5 +1,6 @@
 # Rent-A-Bot
 
+[![Build Status](https://travis-ci.org/cpoisson/rent-a-bot.svg?branch=master)](https://travis-ci.org/cpoisson/rent-a-bot)
 [![pipeline status](https://gitlab.com/cpoisson/rent-a-bot/badges/master/pipeline.svg)](https://gitlab.com/cpoisson/rent-a-bot/commits/master)
 [![coverage report](https://gitlab.com/cpoisson/rent-a-bot/badges/master/coverage.svg)](https://gitlab.com/cpoisson/rent-a-bot/commits/master)
 
@@ -29,10 +30,14 @@ A resource is defined by:
 
 ## How to install and run
 
-Clone the repository
+Clone the repository from GitLab or GitHub
 
 ```commandline
 git clone git@gitlab.com:cpoisson/rent-a-bot.git
+```
+
+```commandline
+git clone git@github.com:cpoisson/rent-a-bot.git
 ```
 
 Create a virtual env (here using virtualenv wrapper)
