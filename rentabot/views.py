@@ -10,7 +10,7 @@ This module contains rent-a-bot RESTful interface.
 from rentabot import app
 from rentabot.models import Resource
 from rentabot.controllers import lock_resource, unlock_resource
-from rentabot.exceptions import ResourceNotAvailable, InvalidLockKey
+from rentabot.exceptions import ResourceAlreadyLocked, InvalidLockToken, ResourceNotFound
 
 from flask import jsonify
 from flask import abort, make_response
@@ -39,7 +39,7 @@ def make_public_uri(resource):
     return new_resource
 
 
-# - [ GET ]
+# - [ GET : Access to resources information ]
 
 @app.route('/rentabot/api/v1.0/resources', methods=['GET'])
 def get_resources():
@@ -48,43 +48,69 @@ def get_resources():
 
 @app.route('/rentabot/api/v1.0/resources/<int:resource_id>', methods=['GET'])
 def get_resource(resource_id):
+
     resource = Resource.query.filter_by(id=resource_id).first()
+
     if resource is None:
-        abort(404)
+        raise ResourceNotFound(message="Resource not found",
+                               payload={'resource_id': resource_id})
     return jsonify({'resource': make_public_uri(resource)})
 
 
-# - [ GET : Acquire and release resource lock ]
+# - [ POST : Acquire and release resource lock ]
 
-@app.route('/rentabot/api/v1.0/resources/<int:resource_id>/lock', methods=['GET'])
+@app.route('/rentabot/api/v1.0/resources/<int:resource_id>/lock', methods=['POST'])
 def lock_by_id(resource_id):
+
     resource = Resource.query.filter_by(id=resource_id).first()
+
     if resource is None:
-        abort(404)
+        raise ResourceNotFound(message="Resource not found",
+                               payload={'resource_id': resource_id})
     try:
-        lock_key = lock_resource(resource)
-    except ResourceNotAvailable:
-        abort(404)
-    return jsonify({'lock-key': lock_key})
+        lock_token = lock_resource(resource)
+    except ResourceAlreadyLocked:
+        raise ResourceAlreadyLocked(message="Cannot lock resource, resource is already locked",
+                                    payload={'resource': resource.dict})
+    else:
+        response = {
+            'message': 'Resource locked',
+            'lock-token': lock_token,
+            'resource': resource.dict
+        }
+        return jsonify(response), 200
 
 
-# TODO: Add an unlock directly by lock_key e.g. resources/unlock?lock-key=xxxxx
-@app.route('/rentabot/api/v1.0/resources/<int:resource_id>/unlock', methods=['GET'])
+@app.route('/rentabot/api/v1.0/resources/<int:resource_id>/unlock', methods=['POST'])
 def unlock_by_id(resource_id):
+
     resource = Resource.query.filter_by(id=resource_id).first()
+
     if resource is None:
-        abort(404)
-    lock_key = request.args.get('lock-key')
+        raise ResourceNotFound(message="Resource not found",
+                               payload={'resource_id': resource_id})
+
+    lock_token = request.args.get('lock-token')
 
     try:
-        unlock_resource(resource, lock_key)
-    except InvalidLockKey:
-        abort(404)
-    return jsonify({'lock-key': 'Resource released.'})
+        unlock_resource(resource, lock_token)
+    except InvalidLockToken:
+        raise InvalidLockToken(message="Cannot unlock resource, the lock token is not valid.",
+                               payload={'resource': resource.dict,
+                                        'invalid-lock-token': lock_token})
+    else:
+        return jsonify({'lock-key': 'Resource unlocked'}), 200
 
 
-# - [ 404 ]
+# - [ API : Error Responses Handler ] ----------------------------------------
 
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
+@app.errorhandler(ResourceNotFound)          # 404 - NOT FOUND
+@app.errorhandler(ResourceAlreadyLocked)     # 423 - LOCKED
+@app.errorhandler(InvalidLockToken)          # 403 - FORBIDDEN
+def handle_error_response(error):
+    response = jsonify(error.dict)
+    response.status_code = error.status_code
+    return response
+
+
+

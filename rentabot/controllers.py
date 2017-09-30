@@ -8,7 +8,7 @@ This module contains rent-a-bot functions related to database manipulation.
 
 
 from rentabot.models import Resource, db
-from rentabot.exceptions import ResourceNotAvailable, InvalidLockKey
+from rentabot.exceptions import ResourceAlreadyLocked, InvalidLockToken
 from uuid import uuid4
 
 
@@ -22,7 +22,7 @@ def lock_resource(resource):
 
     """
     if resource.status == Resource.STATUS[u'locked']:
-        raise ResourceNotAvailable
+        raise ResourceAlreadyLocked
     else:
         resource.lock_key = str(uuid4())
         resource.status = Resource.STATUS[u'locked']
@@ -41,7 +41,7 @@ def unlock_resource(resource, lock_key):
 
     """
     if lock_key != resource.lock_key:
-        raise InvalidLockKey(lock_key)
+        raise InvalidLockToken(lock_key)
 
     if resource.status == Resource.STATUS[u'locked']:
         resource.lock_key = u''

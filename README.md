@@ -93,3 +93,5 @@ python setup.py test
 - [Put versus Post](https://knpuniversity.com/screencast/rest/put-versus-post)
 - [Best practice for a pragmatic restful API](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api#ssl)
 - [Implementing a RESTful Web API with Python & Flask](http://blog.luisrei.com/articles/flaskrest.html)
+- [HTTP status code](https://restpatterns.mindtouch.us/HTTP_Status_Codes)
+- [Implementing API Exceptions](http://flask.pocoo.org/docs/0.12/patterns/apierrors/)
