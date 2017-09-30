@@ -10,10 +10,9 @@ This module contains rent-a-bot RESTful interface.
 from rentabot import app
 from rentabot.models import Resource
 from rentabot.controllers import lock_resource, unlock_resource
-from rentabot.exceptions import ResourceAlreadyLocked, InvalidLockToken, ResourceNotFound
+from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken, ResourceNotFound
 
 from flask import jsonify
-from flask import abort, make_response
 from flask import url_for
 from flask import request
 
@@ -94,18 +93,26 @@ def unlock_by_id(resource_id):
 
     try:
         unlock_resource(resource, lock_token)
+    except ResourceAlreadyUnlocked:
+        raise ResourceAlreadyUnlocked(message="Cannot unlock resource, the resource is already unlocked.",
+                                      payload={'resource': resource.dict})
     except InvalidLockToken:
         raise InvalidLockToken(message="Cannot unlock resource, the lock token is not valid.",
                                payload={'resource': resource.dict,
                                         'invalid-lock-token': lock_token})
     else:
-        return jsonify({'lock-key': 'Resource unlocked'}), 200
+        response = {
+            'message': 'Resource unlocked',
+            'resource': resource.dict
+        }
+        return jsonify(response), 200
 
 
 # - [ API : Error Responses Handler ] ----------------------------------------
 
 @app.errorhandler(ResourceNotFound)          # 404 - NOT FOUND
-@app.errorhandler(ResourceAlreadyLocked)     # 423 - LOCKED
+@app.errorhandler(ResourceAlreadyLocked)     # 403 - FORBIDDEN
+@app.errorhandler(ResourceAlreadyUnlocked)   # 403 - FORBIDDEN
 @app.errorhandler(InvalidLockToken)          # 403 - FORBIDDEN
 def handle_error_response(error):
     response = jsonify(error.dict)

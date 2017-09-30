@@ -26,36 +26,30 @@ class Resource(db.Model):
     """
     id = db.Column(db.Integer, primary_key=True)            # Id
     name = db.Column(db.String(80), unique=True)            # Unique Resource name
-    endpoint = db.Column(db.String(160))                    # Resource endpoint (e.g. an IP address)
     description = db.Column(db.String(160))                 # Resource description
+    lock_token = db.Column(db.String(80))                   # Resource lock token
+    lock_details = db.Column(db.String(160))                # Resource lock details
+    endpoint = db.Column(db.String(160))                    # Resource endpoint (e.g. an IP address)
     tags = db.Column(db.String(160))                        # Resource tags
-    status = db.Column(db.Integer)                          # Resource Status
-    status_details = db.Column(db.String(160))              # Resource Status Details
-    lock_key = db.Column(db.String(80))                     # Resource lock key
-
-    STATUS = {u'available': 0, u'locked': 1}
 
     def __init__(self, name, endpoint=None, description=None, tags=None):
         self.name = name
-        self.endpoint = endpoint
         self.description = description
+        self.lock_details = u'Resource is available'
+        self.endpoint = endpoint
         self.tags = tags
-        self.status = self.STATUS['available']
-        self.status_details = u'Resource available.'
 
     @property
     def dict(self):
-        resource = {
-            'id': self.id,
-            'name': self.name,
-            'endpoint': self.endpoint,
-            'description': self.description,
-            'tags': self.tags,
-            'status': self.status,
-            'status_details': self.status_details,
-            'lock_key': self.lock_key
-        }
-        return resource
+        rv = dict()
+        rv['id'] = self.id
+        rv['name'] = self.name
+        rv['description'] = self.description
+        rv['lock-token'] = self.lock_token
+        rv['lock-details'] = self.lock_details
+        rv['endpoint'] = self.endpoint
+        rv['tags'] = self.tags
+        return rv
 
     def __repr__(self):
         return str(self.dict)

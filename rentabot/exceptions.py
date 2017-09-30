@@ -35,10 +35,19 @@ class ResourceNotFound(ResourceException):
         ResourceException.__init__(self, *argv, **kwargs)
 
 
+class ResourceAlreadyUnlocked(ResourceException):
+    """Raised when a resource is already available."""
+
+    status_code = 403  # Forbidden
+
+    def __init__(self, *argv, **kwargs):
+        ResourceException.__init__(self, *argv, **kwargs)
+
+
 class ResourceAlreadyLocked(ResourceException):
     """Raised when a resource is not available."""
 
-    status_code = 423  # Locked
+    status_code = 403  # Forbidden
 
     def __init__(self, *argv, **kwargs):
         ResourceException.__init__(self, *argv, **kwargs)
