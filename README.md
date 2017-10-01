@@ -7,16 +7,13 @@
 
 ---
 
-## Purpose
-
 Rent-a-bot, your automation resource provider.
 
 Exclusive access to a static resource is a common problem in automation, rent-a-bot allows you to abstract your resources 
 and lock them to prevent any concurrent access.
 
- ---
 
-## Yet another one? 
+## Origin 
 
 Jenkins users can install [Lockable Resource Plugin](https://wiki.jenkins.io/display/JENKINS/Lockable+Resources+Plugin).
 
@@ -25,11 +22,10 @@ This tool works quite well, but the resource lock scope is limited to a Jenkins 
 Rent-A-Bot vocation is to fill the same needs in an environment where multiple automation applications exist.
 
 e.g.
-    - Multiple Jenkins application servers
-    - Mixed automation application, gitlab CI + Jenkins
-    - Shared resources between humans and automates.
+- Multiple Jenkins application servers
+- Mixed automation application, gitlab CI + Jenkins
+- Shared resources between humans and automates.
 
----
 
 ## What is a resource? 
 
@@ -42,7 +38,6 @@ Optional available fields help you customize you resources with additional infor
 - Endpoint
 - Tags
 
----
 
 ## How to install and run
 
@@ -84,7 +79,6 @@ And... run!
 flask run
 ```
 
----
 
 ## How to tests
 
