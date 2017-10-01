@@ -11,21 +11,36 @@
 
 Rent-a-bot, your automation resource provider.
 
-Exclusive access to a resource is a common problem in automation, rent-a-bot allows you to define a pool of resources 
-and obtain an exclusive access to a given resource.
+Exclusive access to a static resource is a common problem in automation, rent-a-bot allows you to abstract your resources 
+and lock them to prevent any concurrent access.
+
+ ---
+
+## Yet another one? 
+
+Jenkins users can install [Lockable Resource Plugin](https://wiki.jenkins.io/display/JENKINS/Lockable+Resources+Plugin).
+
+This tool works quite well, but the resource lock scope is limited to a Jenkins instance.
+
+Rent-A-Bot vocation is to fill the same needs in an environment where multiple automation applications exist.
+
+e.g.
+    - Multiple Jenkins application servers
+    - Mixed automation application, gitlab CI + Jenkins
+    - Shared resources between humans and automates.
 
 ---
 
-## Resource 
+## What is a resource? 
 
-A resource is defined by:
+A resource is defined by a **name** and the existence of a **lock token** indicating if the resource is locked.
 
-- A Name
-- A Description
-- An end point
+Optional available fields help you customize you resources with additional information:
+
+- Resource description
+- Lock description
+- Endpoint
 - Tags
-- A state (available or locked)
-- A state description
 
 ---
 
@@ -51,8 +66,9 @@ workon rent-a-bot
 Install the package
 
 ```commandline
-pip install .   # Add -e if you want to install it in dev mode
+pip install .   # pip install -e . if you want to install it in editable mode
 ```
+
 Add Flask environment variables
 
 ```commandline
