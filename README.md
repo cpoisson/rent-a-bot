@@ -13,7 +13,7 @@ Exclusive access to a static resource is a common problem in automation, rent-a-
 and lock them to prevent any concurrent access.
 
 
-## Origin 
+## Purpose
 
 Jenkins users can install [Lockable Resource Plugin](https://wiki.jenkins.io/display/JENKINS/Lockable+Resources+Plugin).
 
@@ -37,6 +37,11 @@ Optional available fields help you customize you resources with additional infor
 - Lock description
 - Endpoint
 - Tags
+
+
+## Development status
+
+Roadworks ahead, first release will goes out with an API to lock/unlock resources and a front end to display the resources status.
 
 
 ## How to install and run
