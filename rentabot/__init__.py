@@ -9,3 +9,4 @@ app = Flask(__name__)
 
 import rentabot.views
 import rentabot.models
+import rentabot.controllers

@@ -31,7 +31,7 @@ def lock_resource(resource):
 
 
 def unlock_resource(resource, lock_token):
-    """Unlock resource. Raise an exception if the token is invalid or if the resource already unlocked>
+    """Unlock resource. Raise an exception if the token is invalid or if the resource is already unlocked.
 
     Args:
         resource (Resource): The resource to unlock.
