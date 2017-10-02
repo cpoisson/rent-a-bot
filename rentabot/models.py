@@ -51,9 +51,6 @@ class Resource(db.Model):
         rv['tags'] = self.tags
         return rv
 
-    def __repr__(self):
-        return str(self.dict)
-
 
 # Create database if the file does not exist
 if not os.path.exists(db_path):

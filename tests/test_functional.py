@@ -33,11 +33,26 @@ def app():
 
 
 def reset_database():
+    """Drop and create tables."""
     # Reset database
     db.drop_all()
 
     # Create tables
     db.create_all()
+
+
+def create_resources(qty):
+    """ Create resources in the database.
+
+    Args:
+        qty: quantity of resources to create
+
+    """
+    for x in range(qty):
+        db.session.add(Resource(name="resource_{}".format(x),
+                                description="I'm the resource {}!".format(x)))
+    db.session.commit()
+
 
 
 class TestGetResources(object):
@@ -64,10 +79,7 @@ class TestGetResources(object):
 
         # Add resources to the database
         res_count_expected = 10
-        for x in range(res_count_expected):
-            db.session.add(Resource(name="resource_{}".format(x),
-                                    description="I'm the resource {}!".format(x)))
-        db.session.commit()
+        create_resources(res_count_expected)
 
         # Request the available resources
         response = app.get('/rentabot/api/v1.0/resources')
@@ -114,6 +126,54 @@ class TestGetResources(object):
         if res_count_returned != res_count_expected:
             msg = "Oopsie, {} resources were expected, received {}.".format(res_count_expected,
                                                                             res_count_returned)
+            pytest.fail(msg)
+
+    def test_get_a_resource(self, app):
+        """
+        Title: Retrieve an existing resource.
+
+        Given: Multiple resources exists.
+        And: No criteria is provided.
+        When: Requesting a resource that does exist.
+        Then: A 404 error status code is returned.
+        """
+
+        # Reset Database
+        reset_database()
+
+        # Add resources to the database
+        create_resources(10)
+
+        # Request an existing resource
+        response = app.get('/rentabot/api/v1.0/resources/5')
+
+        # Should be a 200 OK
+        if response.status_code != 200:
+            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            pytest.fail(msg)
+
+    def test_get_a_resource_does_not_exist(self, app):
+        """
+        Title: Retrieve a resource that does not exist.
+
+        Given: Multiple resources exists.
+        And: No criteria is provided.
+        When: Requesting a resource that does exist.
+        Then: A 404 error status code is returned.
+        """
+
+        # Reset Database
+        reset_database()
+
+        # Add resources to the database
+        create_resources(10)
+
+        # Request a obviously unkown resource
+        response = app.get('/rentabot/api/v1.0/resources/1000')
+
+        # Should be a 404 Not Found
+        if response.status_code != 404:
+            msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
 
 
@@ -205,6 +265,39 @@ class TestLockUnlockResource(object):
             msg = "Oopsie, the resource seems to be locked."
             pytest.fail(msg)
 
+    def test_unlock_resource_bad_token(self, app):
+        """
+        Title: Unlock a resource.
+
+        Given: A resource exists.
+        And: The resource is locked.
+        When: Requesting to unlock this resource.
+        Then: The resource is unlocked.
+        """
+
+        # Lock a resource (use lock test)
+        self.test_lock_resource(app)
+
+        # Create a bad lock token
+        lock_token = 'verybadlocktokenbadbadbad'
+
+        # Unlock the first resource
+        response = app.post('/rentabot/api/v1.0/resources/1/unlock?lock-token={}'.format(lock_token))
+
+        # Should be a 403 Forbidden
+        if response.status_code != 403:
+            msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
+            pytest.fail(msg)
+
+        # Resource should be still locked
+        response = app.get('/rentabot/api/v1.0/resources/1')
+
+        resource = json.loads(response.get_data())['resource']
+
+        if resource['lock-token'] is None:
+            msg = "Oopsie, the resource seems to be unlocked."
+            pytest.fail(msg)
+
     def test_lock_resource_already_locked(self, app):
         """
         Title: Lock a resource.
@@ -239,7 +332,6 @@ class TestLockUnlockResource(object):
         reset_database()
 
         # Add a resource to the database
-
         db.session.add(Resource(name="resource",
                                 description="I'm a resource!"))
         db.session.commit()
@@ -250,4 +342,30 @@ class TestLockUnlockResource(object):
         # Should be a 403 Forbidden
         if response.status_code != 403:
             msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
+            pytest.fail(msg)
+
+    @pytest.mark.parametrize('cmd', ['lock', 'unlock'])
+    def test_unlock_unlock_resource_does_not_exist(self, app, cmd):
+        """
+        Title: Unlock or Lock a resource that does not exist.
+
+        Given: A resource does not exists.
+        When: Requesting to unlock or lock this resource.
+        Then: A 404 status code is returned.
+        """
+
+        # Reset Database
+        reset_database()
+
+        # Add a resource to the database
+        db.session.add(Resource(name="resource",
+                                description="I'm a resource!"))
+        db.session.commit()
+
+        # Unlock an arbitrary resource 1000000, far away
+        response = app.post('/rentabot/api/v1.0/resources/1000000/{}'.format(cmd))
+
+        # Response should be a 404 Not Found
+        if response.status_code != 404:
+            msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
