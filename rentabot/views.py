@@ -27,22 +27,13 @@ def index():
 # - [ API ] ------------------------------------------------------------------
 
 
-def make_public_uri(resource):
-    resource = resource.dict
-    new_resource = dict()
-    for field in resource:
-        if field == 'id':
-            new_resource['uri'] = url_for('get_resource', resource_id=resource['id'], _external=True)
-        else:
-            new_resource[field] = resource[field]
-    return new_resource
-
-
 # - [ GET : Access to resources information ]
 
 @app.route('/rentabot/api/v1.0/resources', methods=['GET'])
 def get_resources():
-    return jsonify({'resources': map(make_public_uri, Resource.query.all())})
+    # Query all resources
+    resources = [resource.dict for resource in Resource.query.all()]
+    return jsonify({'resources': resources})
 
 
 @app.route('/rentabot/api/v1.0/resources/<int:resource_id>', methods=['GET'])
@@ -53,7 +44,7 @@ def get_resource(resource_id):
     if resource is None:
         raise ResourceNotFound(message="Resource not found",
                                payload={'resource_id': resource_id})
-    return jsonify({'resource': make_public_uri(resource)})
+    return jsonify({'resource': resource.dict})
 
 
 # - [ POST : Acquire and release resource lock ]

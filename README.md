@@ -110,3 +110,4 @@ python setup.py test
 - [Implementing a RESTful Web API with Python & Flask](http://blog.luisrei.com/articles/flaskrest.html)
 - [HTTP status code](https://restpatterns.mindtouch.us/HTTP_Status_Codes)
 - [Implementing API Exceptions](http://flask.pocoo.org/docs/0.12/patterns/apierrors/)
+- [The Hitchhiker's Guide To Python](http://docs.python-guide.org/en/latest/)
