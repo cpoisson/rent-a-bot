@@ -54,7 +54,6 @@ def create_resources(qty):
     db.session.commit()
 
 
-
 class TestGetResources(object):
     """
     Title: Retrieve the existing resources by criteria.
