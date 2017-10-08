@@ -378,18 +378,18 @@ class TestInitResourcesFromYamlFile(object):
     Title: Init the database with a YAML configuration file at startup
 
     As: An application user
-    I want: To describe the resources statically in a YAML file
-    So that:
+    I want: The application to automatically populate the database with resources at startup
+    So that: The application run from scratch with static resources available.
     """
 
     @pytest.mark.skip
-    def test_(self, app):
+    def test_init_db_with_configuration_file(self, app):
         """
         Title:
 
-        Given: .
-        And: The resource is not locked.
-        When: Requesting a lock on this resource.
-        Then: The resource is locked.
+        Given: A yaml configuration file with resources described exists
+        And: Rent a bot is not yet started
+        When: Starting rent a bot
+        Then: The database is created with the resources described in the configuration file
         """
         pass
