@@ -134,7 +134,7 @@ class TestGetResources(object):
         Given: Multiple resources exists.
         And: No criteria is provided.
         When: Requesting a resource that does exist.
-        Then: A 404 error status code is returned.
+        Then: The corresponding resource
         """
 
         # Reset Database
@@ -150,6 +150,9 @@ class TestGetResources(object):
         if response.status_code != 200:
             msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
+
+        # Should contains 0 resources
+        resource = json.loads(response.get_data().decode('utf-8'))['resource']
 
     def test_get_a_resource_does_not_exist(self, app):
         """
@@ -181,7 +184,7 @@ class TestLockUnlockResource(object):
     Title: Lock/Unlock a resource.
 
     As: An automation application.
-    I want: An API to retrieve to lock and unlock a given resource.
+    I want: An API to lock and unlock a given resource.
     So that: I can state to 3rd parties that this given resource is locked.
     """
 
@@ -368,3 +371,25 @@ class TestLockUnlockResource(object):
         if response.status_code != 404:
             msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
+
+
+class TestInitResourcesFromYamlFile(object):
+    """
+    Title: Init the database with a YAML configuration file at startup
+
+    As: An application user
+    I want: To describe the resources statically in a YAML file
+    So that:
+    """
+
+    @pytest.mark.skip
+    def test_(self, app):
+        """
+        Title:
+
+        Given: .
+        And: The resource is not locked.
+        When: Requesting a lock on this resource.
+        Then: The resource is locked.
+        """
+        pass
