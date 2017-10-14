@@ -10,6 +10,7 @@ This module contains rent-a-bot functions related to database manipulation.
 from rentabot.models import Resource, db
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
 from uuid import uuid4
+import yaml
 
 
 def lock_resource(resource):
@@ -47,5 +48,50 @@ def unlock_resource(resource, lock_token):
     else:
         resource.lock_token = None
         resource.lock_details = u'Resource available.'
+        db.session.commit()
+
+
+def populate_database_from_file(resource_file):
+    """ Populate the database using the resources described in a yaml file.
+
+    Args:
+      resource_file (str): the resource descriptor.
+
+    """
+    with open(resource_file, "r") as f:
+        resources = yaml.load(f)
+
+    if len(list(resources)) == 0:
+        msg = "The resource descriptor does not contain any resources: {}".format(resource_file)
+        raise Exception(msg)
+
+    if len(list(resources)) != len(set(list(resources))):
+        msg = "The resource descriptor contains duplicated resource names. {}".format(resource_file)
+        raise Exception(msg)
+
+    db.drop_all()
+    db.create_all()
+
+    for resource_name in list(resources):
+
+        try:
+            description = resources[resource_name]['description']
+        except KeyError:
+            description = None
+
+        try:
+            endpoint = resources[resource_name]['endpoint']
+        except KeyError:
+            endpoint = None
+
+        try:
+            tags = resources[resource_name]['tags']
+        except KeyError:
+            tags = None
+
+        db.session.add(Resource(resource_name,
+                                description=description,
+                                endpoint=endpoint,
+                                tags=tags))
         db.session.commit()
 

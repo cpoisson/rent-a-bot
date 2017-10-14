@@ -51,8 +51,3 @@ class Resource(db.Model):
         rv['tags'] = self.tags
         return rv
 
-
-# Create database if the file does not exist
-if not os.path.exists(db_path):
-    db.create_all()
-    db.session.commit()

@@ -74,7 +74,8 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['flask',
-                      'flask-sqlalchemy'],
+                      'flask-sqlalchemy',
+                      'pyyaml'],
 
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-cov'],

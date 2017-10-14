@@ -11,4 +11,5 @@ before_script:
 unit_test:
   stage: test
   script:
+    - export RENTABOT_RESOURCE_DESCRIPTOR="tests/assets/resource_descriptor.yaml"
     - python setup.py test

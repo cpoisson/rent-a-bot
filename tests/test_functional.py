@@ -23,8 +23,8 @@ import pytest
 import rentabot
 from rentabot.models import Resource, db
 
-import json
-
+import os
+import json, yaml
 
 @pytest.fixture
 def app():
@@ -52,6 +52,53 @@ def create_resources(qty):
         db.session.add(Resource(name="resource_{}".format(x),
                                 description="I'm the resource {}!".format(x)))
     db.session.commit()
+
+
+class TestInitResourcesFromDescriptor(object):
+    """
+    Title: Init the database with a YAML configuration file at startup
+
+    As: An application user
+    I want: The application to automatically populate the database with resources at startup
+    So that: The application run from scratch with static resources available.
+    """
+
+    def test_init_db_with_configuration_file(self, app):
+        """
+        Title:
+
+        Given: A yaml configuration file with resources described exists
+        And: An environment variable exists to indicate the path of the resource descriptor
+        And: Rent a bot is not yet started
+        When: Starting rent a bot
+        Then: The database is created with the resources described in the configuration file
+        """
+
+        try:
+            descriptor_path = os.path.abspath(os.environ['RENTABOT_RESOURCE_DESCRIPTOR'])
+        except KeyError:
+            pytest.skip("No ressource descriptor provided, skipping test.")
+
+        with open(descriptor_path, 'r') as f:
+            input_resources = yaml.load(f)
+
+        # Request the available resources
+        response = app.get('/rentabot/api/v1.0/resources')
+
+        # Should be a 200 OK
+        if response.status_code != 200:
+            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            pytest.fail(msg)
+
+        # Should contains the count of resources expected
+        resources = json.loads(response.get_data().decode('utf-8'))['resources']
+
+        res_count_expected = len(list(input_resources))
+        res_count_returned = len(list(resources))
+        if res_count_returned != res_count_expected:
+            msg = "Oopsie, {} resources were expected, received {}.".format(res_count_expected,
+                                                                            res_count_returned)
+            pytest.fail(msg)
 
 
 class TestGetResources(object):
@@ -373,23 +420,3 @@ class TestLockUnlockResource(object):
             pytest.fail(msg)
 
 
-class TestInitResourcesFromYamlFile(object):
-    """
-    Title: Init the database with a YAML configuration file at startup
-
-    As: An application user
-    I want: The application to automatically populate the database with resources at startup
-    So that: The application run from scratch with static resources available.
-    """
-
-    @pytest.mark.skip
-    def test_init_db_with_configuration_file(self, app):
-        """
-        Title:
-
-        Given: A yaml configuration file with resources described exists
-        And: Rent a bot is not yet started
-        When: Starting rent a bot
-        Then: The database is created with the resources described in the configuration file
-        """
-        pass
