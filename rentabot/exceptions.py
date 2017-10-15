@@ -7,6 +7,8 @@ This module contains rent-a-bot custom exceptions.
 """
 
 
+# - [ Resource Exception ] ---------------------------------------------------
+
 class ResourceException(Exception):
     """Base Resource Exception."""
 
@@ -58,3 +60,29 @@ class InvalidLockToken(ResourceException):
 
     def __init__(self, *argv, **kwargs):
         ResourceException.__init__(self, *argv, **kwargs)
+
+
+# - [ Resource Descriptor Exception ] ----------------------------------------
+
+class ResourceDescriptorException(Exception):
+    """Base resource descriptor exception"""
+    def __init__(self, file_descriptor, message=None):
+        if message is None:
+            self.message = "An error occurred with resource descriptor: {}".format(file_descriptor)
+        else:
+            self.message = message
+        self.file_descriptor = file_descriptor
+
+
+class ResourceDescriptorIsEmpty(ResourceDescriptorException):
+    """The resource descriptor does not contain any resources"""
+    def __init__(self, file_descriptor):
+        msg = "The resource descriptor is empty : {}".format(file_descriptor)
+        ResourceDescriptorException.__init__(file_descriptor, message=msg)
+
+
+class ResourceDescriptorDuplicatedName(ResourceDescriptorException):
+    """The resource descriptor contains duplicated resource name"""
+    def __init__(self, file_descriptor):
+        msg = "The resource descriptor contains duplicated name : {}".format(file_descriptor)
+        ResourceDescriptorException.__init__(file_descriptor, message=msg)
