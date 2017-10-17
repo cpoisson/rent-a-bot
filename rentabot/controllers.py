@@ -27,7 +27,7 @@ def lock_resource(resource):
         raise ResourceAlreadyLocked
     else:
         resource.lock_token = str(uuid4())
-        resource.lock_details = u'Resource locked.'
+        resource.lock_details = u'Resource locked'
         db.session.commit()
     return resource.lock_token
 
@@ -48,7 +48,7 @@ def unlock_resource(resource, lock_token):
         raise InvalidLockToken
     else:
         resource.lock_token = None
-        resource.lock_details = u'Resource available.'
+        resource.lock_details = u'Resource available'
         db.session.commit()
 
 

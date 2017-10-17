@@ -12,7 +12,7 @@ from rentabot.models import Resource
 from rentabot.controllers import lock_resource, unlock_resource
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken, ResourceNotFound
 
-from flask import jsonify
+from flask import jsonify, render_template
 from flask import url_for
 from flask import request
 
@@ -21,7 +21,9 @@ from flask import request
 
 @app.route('/')
 def index():
-    return '<h1>Rent-A-Bot</h1>'
+    # Query all resources
+    resources = [resource for resource in Resource.query.all()]
+    return render_template('display_resources.html', resources=resources)
 
 
 # - [ API ] ------------------------------------------------------------------
