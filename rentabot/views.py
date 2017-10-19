@@ -13,7 +13,6 @@ from rentabot.controllers import lock_resource, unlock_resource
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken, ResourceNotFound
 
 from flask import jsonify, render_template
-from flask import url_for
 from flask import request
 
 

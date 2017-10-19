@@ -39,11 +39,6 @@ Optional available fields help you customize you resources with additional infor
 - Tags
 
 
-## Development status
-
-Roadworks ahead, first release will goes out with an API to lock/unlock resources and a front end to display the resources status.
-
-
 ## How to install and run
 
 Clone the repository from GitLab or GitHub
@@ -84,6 +79,85 @@ And... run!
 flask run
 ```
 
+## How to use it
+
+Alright, rent-a-bot is up and running.
+
+At this stage you can connect to the front end at http://127.0.0.1:5000/ (assuming your flask app listen to the port 500)
+
+You will notice that the resource list is empty (dang...), let's populate it 
+
+### Populate the database
+
+You will need a resource descriptor file to populate the database at startup.
+
+```commandline
+RENTABOT_RESOURCE_DESCRIPTOR="/absolute/path/to/your/resource/descriptor.yml"
+```
+
+### Resource descriptor
+
+The resource descriptor is a YAML file. It's purpose is to declare the resources you want to make available on rent-a-bot
+
+```yaml
+# Resources Description
+# This file describes resources to populate in the database at rent-a-bot startup
+
+coffee-machine:
+    description: "Kitchen coffee machine"
+    endpoint: "tcp://192.168.1.50"
+    tags: "coffee kitchen food"
+
+3d-printer-1:
+    description: "Basement 3d printer 1"
+    endpoint: "tcp://192.168.1.60"
+    tags: "3d-printer basement tool"
+
+another-resource:
+    description: "yet another resource"
+    endpoint: ""
+    tags: ""
+```
+
+Once set, (re)start the flask application. The web view should be populated with your resources.
+
+### RestFul API
+
+#### List resources 
+GET /api/v1.0/resources
+
+e.g.
+```commandline
+curl -X GET -i http://localhost:5000/rentabot/api/v1.0/resources
+```
+
+#### Access to a given resource 
+GET /api/v1.0/resources/{resource_id}
+
+e.g.
+```commandline
+curl -X GET -i http://localhost:5000/rentabot/api/v1.0/resources/2
+```
+
+#### Lock a resource
+POST /api/v1.0/resources/{resource_id}/lock
+
+e.g.
+```commandline
+curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/6/lock
+```
+**Note:** If the resource is available, a lock-token will be returned. Otherwise an error code is returned.
+
+
+#### Unlock a resource
+POST /api/v1.0/resources/{resource_id}/unlock?lock-token={resource/lock/token}
+
+```commandline
+curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/6/unlock\?lock-token\={resource/lock/token}
+```
+
+**Note:** If the resource is already unlocked or the lock-token is not valid, an error code is returned.
+    
 
 ## How to tests
 
