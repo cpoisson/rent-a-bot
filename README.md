@@ -15,9 +15,9 @@ and lock them to prevent any concurrent access.
 
 ## Purpose
 
-This tools is quite similar to [Lockable Resource Plugin](https://wiki.jenkins.io/display/JENKINS/Lockable+Resources+Plugin).
+Rent-a-bot pursue the same objective as Jenkins [Lockable Resource Plugin](https://wiki.jenkins.io/display/JENKINS/Lockable+Resources+Plugin).
 
-This Jenkins plugin works quite well, but it is only usable for... well... Jenkins.
+This latter works quite well, but only if you use... well... Jenkins.
 
 Rent-A-Bot purpose is to fill the same needs in an environment where multiple automation applications exist.
 
