@@ -30,7 +30,7 @@ setup(
     url='https://github.com/cpoisson/rent-a-bot',
 
     author='Charles Poisson',
-    author_email='charles.poisson(at)gmail.com',
+    author_email='charles.poisson@gmail.com',
 
     license='MIT',
 
