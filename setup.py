@@ -1,20 +1,31 @@
-"""A setuptools based setup module.
+# -*- coding: utf-8 -*-
+"""
+Rent-A-Bot
+----------
 
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
+Rent-A-Bot, your automation resource provider!
+
+Rent-A-Bot is designed to help you lock your resources in your automation infrastructure.
+
+Setup
+`````
+.. code:: bash
+    $ pip install rent-a-bot
+    $ export FLASK_APP=rentabot
+    $ export RENTABOT_RESOURCE_DESCRIPTOR=path/to/your/descriptor
+    $ flask run
+
+Links
+`````
+* `website <https://github.com/cpoisson/rent-a-bot>`_
+
 """
 
 from setuptools import setup, find_packages
 
-from codecs import open
 from os import path
 
 here = path.abspath(path.dirname(__file__))
-
-# Long description of the project is in the README.md
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
 
 setup(
 
@@ -22,10 +33,10 @@ setup(
 
     name='rent-a-bot',
 
-    version='0.0.1',
+    version='0.0.2',
 
     description='Rent-A-Bot, your automation resource provider.',
-    long_description=long_description,
+    long_description=__doc__,
 
     url='https://github.com/cpoisson/rent-a-bot',
 
