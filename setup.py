@@ -33,7 +33,7 @@ setup(
 
     name='rent-a-bot',
 
-    version='0.0.2',
+    version='0.0.3',
 
     description='Rent-A-Bot, your automation resource provider.',
     long_description=__doc__,
