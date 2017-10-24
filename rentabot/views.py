@@ -15,6 +15,8 @@ from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, 
 from flask import jsonify, render_template
 from flask import request
 
+import threading
+thread_safe_lock = threading.Lock()
 
 # - [ Web View ] --------------------------------------------------------------
 
@@ -52,24 +54,26 @@ def get_resource(resource_id):
 
 @app.route('/rentabot/api/v1.0/resources/<int:resource_id>/lock', methods=['POST'])
 def lock_by_id(resource_id):
+    # Prevent concurrent database access in a multi threaded execution context
+    with thread_safe_lock:
 
-    resource = Resource.query.filter_by(id=resource_id).first()
+        resource = Resource.query.filter_by(id=resource_id).first()
 
-    if resource is None:
-        raise ResourceNotFound(message="Resource not found",
-                               payload={'resource_id': resource_id})
-    try:
-        lock_token = lock_resource(resource)
-    except ResourceAlreadyLocked:
-        raise ResourceAlreadyLocked(message="Cannot lock resource, resource is already locked",
-                                    payload={'resource': resource.dict})
-    else:
-        response = {
-            'message': 'Resource locked',
-            'lock-token': lock_token,
-            'resource': resource.dict
-        }
-        return jsonify(response), 200
+        if resource is None:
+            raise ResourceNotFound(message="Resource not found",
+                                   payload={'resource_id': resource_id})
+        try:
+            lock_token = lock_resource(resource)
+        except ResourceAlreadyLocked:
+            raise ResourceAlreadyLocked(message="Cannot lock resource, resource is already locked",
+                                        payload={'resource': resource.dict})
+        else:
+            response = {
+                'message': 'Resource locked',
+                'lock-token': lock_token,
+                'resource': resource.dict
+            }
+            return jsonify(response), 200
 
 
 @app.route('/rentabot/api/v1.0/resources/<int:resource_id>/unlock', methods=['POST'])
