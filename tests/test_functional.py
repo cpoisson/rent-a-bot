@@ -27,8 +27,10 @@ import os
 import json, yaml
 
 @pytest.fixture
-def app():
+def app(tmpdir):
     rentabot.app.testing = True
+    # Use pytest tmpdir for a temp database path
+    rentabot.app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(tmpdir.strpath, 'rent-a-bot.sqlite')
     return rentabot.app.test_client()
 
 
@@ -63,6 +65,7 @@ class TestInitResourcesFromDescriptor(object):
     So that: The application run from scratch with static resources available.
     """
 
+    @pytest.mark.skipif(os.environ.get('RENTABOT_RESOURCE_DESCRIPTOR') is None, reason='No resource descriptor provided, skipping test.')
     def test_init_db_with_configuration_file(self, app):
         """
         Title:
@@ -74,10 +77,7 @@ class TestInitResourcesFromDescriptor(object):
         Then: The database is created with the resources described in the configuration file
         """
 
-        try:
-            descriptor_path = os.path.abspath(os.environ['RENTABOT_RESOURCE_DESCRIPTOR'])
-        except KeyError:
-            pytest.skip("No ressource descriptor provided, skipping test.")
+        descriptor_path = os.path.abspath(os.environ['RENTABOT_RESOURCE_DESCRIPTOR'])
 
         with open(descriptor_path, 'r') as f:
             input_resources = yaml.load(f)
@@ -224,6 +224,9 @@ class TestGetResources(object):
         if response.status_code != 404:
             msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
+        # Check that the 404 returned is the app 404 and not a generic one.
+        response_json = json.loads(response.get_data().decode('utf-8'))
+        assert response_json['resource_id'] == 1000
 
 
 class TestLockUnlockResource(object):
@@ -412,11 +415,15 @@ class TestLockUnlockResource(object):
         db.session.commit()
 
         # Unlock an arbitrary resource 1000000, far away
-        response = app.post('/rentabot/api/v1.0/resources/1000000/{}'.format(cmd))
+        resource_id = 100000
+        response = app.post('/rentabot/api/v1.0/resources/{}/{}'.format(resource_id, cmd))
 
         # Response should be a 404 Not Found
         if response.status_code != 404:
             msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
 
+        # Check that the 404 returned is the app 404 and not a generic one.
+        response_json = json.loads(response.get_data().decode('utf-8'))
+        assert response_json['resource_id'] == resource_id
 
