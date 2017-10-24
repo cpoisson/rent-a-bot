@@ -27,8 +27,10 @@ import os
 import json, yaml
 
 @pytest.fixture
-def app():
+def app(tmpdir):
     rentabot.app.testing = True
+    # Use pytest tmpdir for a temp database path
+    rentabot.app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(tmpdir.strpath, 'rent-a-bot.sqlite')
     return rentabot.app.test_client()
 
 
