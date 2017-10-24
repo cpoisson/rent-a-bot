@@ -65,6 +65,7 @@ class TestInitResourcesFromDescriptor(object):
     So that: The application run from scratch with static resources available.
     """
 
+    @pytest.mark.skipif(os.environ.get('RENTABOT_RESOURCE_DESCRIPTOR') is None, reason='No resource descriptor provided, skipping test.')
     def test_init_db_with_configuration_file(self, app):
         """
         Title:
@@ -76,10 +77,7 @@ class TestInitResourcesFromDescriptor(object):
         Then: The database is created with the resources described in the configuration file
         """
 
-        try:
-            descriptor_path = os.path.abspath(os.environ['RENTABOT_RESOURCE_DESCRIPTOR'])
-        except KeyError:
-            pytest.skip("No ressource descriptor provided, skipping test.")
+        descriptor_path = os.path.abspath(os.environ['RENTABOT_RESOURCE_DESCRIPTOR'])
 
         with open(descriptor_path, 'r') as f:
             input_resources = yaml.load(f)
