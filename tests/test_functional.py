@@ -224,6 +224,9 @@ class TestGetResources(object):
         if response.status_code != 404:
             msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
+        # Check that the 404 returned is the app 404 and not a generic one.
+        response_json = json.loads(response.get_data().decode('utf-8'))
+        assert response_json['resource_id'] == 1000
 
 
 class TestLockUnlockResource(object):
@@ -412,11 +415,15 @@ class TestLockUnlockResource(object):
         db.session.commit()
 
         # Unlock an arbitrary resource 1000000, far away
-        response = app.post('/rentabot/api/v1.0/resources/1000000/{}'.format(cmd))
+        resource_id = 100000
+        response = app.post('/rentabot/api/v1.0/resources/{}/{}'.format(resource_id, cmd))
 
         # Response should be a 404 Not Found
         if response.status_code != 404:
             msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
 
+        # Check that the 404 returned is the app 404 and not a generic one.
+        response_json = json.loads(response.get_data().decode('utf-8'))
+        assert response_json['resource_id'] == resource_id
 
