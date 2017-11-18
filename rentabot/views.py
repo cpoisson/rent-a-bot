@@ -8,7 +8,6 @@ This module contains rent-a-bot RESTful interface.
 
 
 from rentabot import app
-from rentabot.models import Resource
 from rentabot.controllers import get_all_ressources, get_resource_from_id, lock_resource, unlock_resource
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken, ResourceNotFound
 
