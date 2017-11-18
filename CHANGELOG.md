@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.0.5] - 2017-11-18
+### Changed
+- Refactor view and controllers to isolate db transactions into the controller.
+
+---
+
 ## [0.0.4] - 2017-10-24
 ### Fixed
 - Fix a potential race condition on a multi threaded server context [Issues-2](https://github.com/cpoisson/rent-a-bot/issues/2)
