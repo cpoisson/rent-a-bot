@@ -11,11 +11,15 @@ from rentabot.models import Resource, db
 from rentabot.exceptions import ResourceNotFound
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
 from rentabot.exceptions import ResourceDescriptorIsEmpty, ResourceDescriptorDuplicatedName
+from rentabot.logger import get_logger
+
 from uuid import uuid4
 import yaml
 
 import threading
 thread_safe_lock = threading.Lock()
+
+logger = get_logger(__name__)
 
 
 def get_all_ressources():
@@ -96,6 +100,8 @@ def populate_database_from_file(resource_descriptor):
       resource_descriptor (str): the resource descriptor.
 
     """
+    logger.info("Populating the database. Descriptor : {}".format(resource_descriptor))
+
     with open(resource_descriptor, "r") as f:
         resources = yaml.load(f)
 
@@ -109,6 +115,8 @@ def populate_database_from_file(resource_descriptor):
     db.create_all()
 
     for resource_name in list(resources):
+
+        logger.debug("Add resource : {}".format(resource_name))
 
         try:
             description = resources[resource_name]['description']
