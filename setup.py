@@ -33,7 +33,7 @@ setup(
 
     name='rent-a-bot',
 
-    version='0.0.5',
+    version='0.0.6',
 
     description='Rent-A-Bot, your automation resource provider.',
     long_description=__doc__,
@@ -66,7 +66,8 @@ setup(
     # Run time Requirements
     install_requires=['flask',
                       'flask-sqlalchemy',
-                      'pyyaml'],
+                      'pyyaml',
+                      'daiquiri'],
 
     setup_requires=['pytest-runner'],
 
