@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.0.6] - 2017-11-26
+### Added
+- Logs using daiquiri
+
+---
+
 ## [0.0.5] - 2017-11-18
 ### Changed
 - Refactor view and controllers to isolate db transactions into the controller.
