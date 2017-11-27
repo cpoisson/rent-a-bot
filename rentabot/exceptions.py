@@ -78,11 +78,4 @@ class ResourceDescriptorIsEmpty(ResourceDescriptorException):
     """The resource descriptor does not contain any resources"""
     def __init__(self, file_descriptor):
         msg = "The resource descriptor is empty : {}".format(file_descriptor)
-        ResourceDescriptorException.__init__(file_descriptor, message=msg)
-
-
-class ResourceDescriptorDuplicatedName(ResourceDescriptorException):
-    """The resource descriptor contains duplicated resource name"""
-    def __init__(self, file_descriptor):
-        msg = "The resource descriptor contains duplicated name : {}".format(file_descriptor)
-        ResourceDescriptorException.__init__(file_descriptor, message=msg)
+        ResourceDescriptorException.__init__(self, file_descriptor, message=msg)
