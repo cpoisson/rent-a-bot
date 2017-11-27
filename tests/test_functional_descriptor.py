@@ -40,7 +40,7 @@ class TestInitResourcesFromDescriptor(object):
                         reason='No resource descriptor provided, skipping test.')
     def test_init_db_with_configuration_file(self, app):
         """
-        Title:
+        Title: Init DB with a resource descriptor file
 
         Given: A yaml configuration file with resources described exists
         And: An environment variable exists to indicate the path of the resource descriptor
