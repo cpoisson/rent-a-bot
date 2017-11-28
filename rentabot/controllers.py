@@ -8,7 +8,7 @@ This module contains rent-a-bot functions related to database manipulation.
 
 
 from rentabot.models import Resource, db
-from rentabot.exceptions import ResourceNotFound
+from rentabot.exceptions import ResourceException, ResourceNotFound
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
 from rentabot.exceptions import ResourceDescriptorIsEmpty
 from rentabot.logger import get_logger
@@ -45,31 +45,97 @@ def get_resource_from_id(resource_id):
     return resource
 
 
-def lock_resource(resource_id):
+def get_resource_from_name(resource_name):
+    """Returns a Resource object given it's name.
+
+    Args:
+        resource_name: the name of the resource.
+
+    Returns:
+        A Resource object.
+    """
+    resource = Resource.query.filter_by(name=resource_name).first()
+
+    if resource is None:
+        logger.warning("Resource not found. Name : {}".format(resource_name))
+        raise ResourceNotFound(message="Resource not found",
+                               payload={'resource_name': resource_name})
+    return resource
+
+
+def get_resources_from_tags(resource_tags):
+    """Returns a Resource object list given their tags.
+
+    Args:
+        resource_tags: the tags of the resource we are looking for.
+
+    Returns:
+        A Resource object.
+    """
+    print resource_tags
+    resources = Resource.query.filter_by(tags=resource_tags[0]).first()
+
+    if resources is None:
+        logger.warning("Resources not found. Name : {}".format(resource_tags))
+        raise ResourceNotFound(message="Resource not found",
+                               payload={'resource_tags': resource_tags})
+    return resources
+
+
+def get_available_resource(rid=None, name=None, tags=None):
+    """Returns an available resource object.
+
+    Args:
+        rid:
+        name:
+        tags:
+
+    Returns:
+
+    """
+    if rid is not None:
+        resource = get_resource_from_id(rid)
+    elif name is not None:
+        resource = get_resource_from_name(name)
+    elif tags is not None and len(tags) > 0:
+        resources = get_resources_from_tags(tags)
+        resource = resources[0]
+        for resource in resources:
+            if resource.lock_token is not None:
+                break
+    else:
+        raise ResourceException(message="Bad Request")
+
+    if resource.lock_token is not None:
+        logger.warning("Resource already locked. Id : {}".format(resource.id))
+        raise ResourceAlreadyLocked(message="Cannot lock resource, resource is already locked",
+                                    payload={'resource': resource.dict})
+    return resource
+
+
+def lock_resource(rid=None, name=None, tags=None):
     """Lock resource. Raise an exception if the resource is already locked.
 
     Args:
-        resource_id (int): The id of the resource to lock.
+        rid (int): The id of the resource to lock.
+        name (str): The name of the resource to lock.
+        tags (list): The tags of the resource to lock.
 
     Returns:
         The lock token value
     """
     # Prevent concurrent database access in a multi threaded execution context
     with thread_safe_lock:
-        resource = get_resource_from_id(resource_id)
 
-        if resource.lock_token is not None:
-            logger.warning("Resource already locked. Id : {}".format(resource_id))
-            raise ResourceAlreadyLocked(message="Cannot lock resource, resource is already locked",
-                                        payload={'resource': resource.dict})
+        resource = get_available_resource(rid=rid, name=name, tags=tags)
 
         resource.lock_token = str(uuid4())
         resource.lock_details = u'Resource locked'
         db.session.commit()
 
-        logger.info("Resource locked. Id : {}".format(resource_id))
+        logger.info("Resource locked. Id : {}".format(resource.id))
 
-        return resource.lock_token
+        return resource.lock_token, resource
 
 
 def unlock_resource(resource_id, lock_token):
