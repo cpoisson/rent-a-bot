@@ -72,10 +72,18 @@ def get_resources_from_tags(resource_tags):
     Returns:
         A Resource object.
     """
-    resources = Resource.query.filter_by(tags=resource_tags[0]).first()
+    all_resources = get_all_ressources()
+    resources = list()
 
-    if resources is None:
-        logger.warning("Resources not found. Name : {}".format(resource_tags))
+    # Filter the ones matching the tags
+    for resource in all_resources:
+        if not resource.tags:
+            continue
+        if set(resource.tags.split()).intersection(set(resource_tags)) == set(resource_tags):
+            resources.append(resource)
+
+    if not resources:
+        logger.warning("Resources not found. Tag(s) : {}".format(resource_tags))
         raise ResourceNotFound(message="Resource not found",
                                payload={'resource_tags': resource_tags})
     return resources
