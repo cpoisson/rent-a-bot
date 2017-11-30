@@ -75,7 +75,7 @@ def get_resources_from_tags(resource_tags):
     all_resources = get_all_ressources()
     resources = list()
 
-    # Filter the ones matching the tags
+    # Filter the ones matching the tags, TODO: Use database more efficiently
     for resource in all_resources:
         if not resource.tags:
             continue
@@ -84,8 +84,8 @@ def get_resources_from_tags(resource_tags):
 
     if not resources:
         logger.warning("Resources not found. Tag(s) : {}".format(resource_tags))
-        raise ResourceNotFound(message="Resource not found",
-                               payload={'resource_tags': resource_tags})
+        raise ResourceNotFound(message="No resource found matching the tag(s)",
+                               payload={'tags': resource_tags})
     return resources
 
 
