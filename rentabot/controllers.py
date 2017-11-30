@@ -72,7 +72,6 @@ def get_resources_from_tags(resource_tags):
     Returns:
         A Resource object.
     """
-    print resource_tags
     resources = Resource.query.filter_by(tags=resource_tags[0]).first()
 
     if resources is None:
