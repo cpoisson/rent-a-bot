@@ -4,3 +4,4 @@ rent_a_bot.egg-info/
 .eggs/
 .cache/
 .coverage
+dist/
