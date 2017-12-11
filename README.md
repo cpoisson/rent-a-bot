@@ -148,6 +148,19 @@ curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/6/lock
 ```
 **Note:** If the resource is available, a lock-token will be returned. Otherwise an error code is returned.
 
+### Lock a resource using it's resource id (rid), name (name) or tag (tag).
+POST /api/v1.0/resources/lock
+
+e.g.
+```commandline
+curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?rid\=6
+curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?name\=coffee-maker
+curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?tag\=coffee\&tag\=kitchen
+```
+
+**Notes:**
+- If multiple available resources it the criteria, the first available will be returned.
+- If criteria types are exclusive, resource id is prioritize over the name and tags, name is prioritize over tags.
 
 #### Unlock a resource
 POST /api/v1.0/resources/{resource_id}/unlock?lock-token={resource/lock/token}

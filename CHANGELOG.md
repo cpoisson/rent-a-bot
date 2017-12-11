@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ---
 
+## [0.1.0] - 2017-12-09
+### Added
+- Restful API to retrieve an available resource using an id, a name, or tags as an input. (/rentabot/api/v1.0/resources/lock)
+
+---
+
 ## [0.0.6] - 2017-11-26
 ### Added
 - Logs using daiquiri
