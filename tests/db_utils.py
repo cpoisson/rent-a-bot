@@ -26,6 +26,22 @@ def create_resources(qty):
 
     """
     for x in range(qty):
-        db.session.add(Resource(name="resource_{}".format(x),
+        db.session.add(Resource(name="resource-{}".format(x),
                                 description="I'm the resource {}!".format(x)))
+    db.session.commit()
+
+
+def create_resources_with_tags():
+    """ Create resources with tags in the database
+
+    """
+    resources = {
+        "arduino-1": "arduino leds",
+        "arduino-2": "arduino motors",
+        "raspberry-pi-1": "raspberry multipurpose",
+        "raspberry-pi-2": "raspberry multipurpose"
+    }
+    for resource_name in list(resources):
+        db.session.add(Resource(name=resource_name,
+                                tags=resources[resource_name]))
     db.session.commit()
