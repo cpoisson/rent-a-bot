@@ -47,10 +47,11 @@ def get_resource(resource_id):
 
 @app.route('/rentabot/api/v1.0/resources/<int:resource_id>/lock', methods=['POST'])
 def lock_by_id(resource_id):
-    lock_token, resource_id = lock_resource(rid=resource_id)
+    lock_token, resource = lock_resource(rid=resource_id)
     response = {
         'message': 'Resource locked',
-        'lock-token': lock_token
+        'lock-token': lock_token,
+        'resource': resource.dict
     }
     return jsonify(response), 200
 
@@ -70,10 +71,11 @@ def lock_by_criterias():
     resource_id = request.args.get('id')
     resource_name = request.args.get('name')
     resource_tags = request.args.getlist('tag')
-    lock_token, resource_id = lock_resource(rid=resource_id, name=resource_name, tags=resource_tags)
+    lock_token, resource = lock_resource(rid=resource_id, name=resource_name, tags=resource_tags)
     response = {
         'message': 'Resource locked',
-        'lock-token': lock_token
+        'lock-token': lock_token,
+        'resource': resource.dict
     }
     return jsonify(response), 200
 

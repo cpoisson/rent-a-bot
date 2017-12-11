@@ -89,16 +89,16 @@ def get_resources_from_tags(resource_tags):
     return resources
 
 
-def get_available_resource(rid=None, name=None, tags=None):
+def get_an_available_resource(rid=None, name=None, tags=None):
     """Returns an available resource object.
 
     Args:
-        rid:
-        name:
-        tags:
+        rid (int): The id
+        name (str):
+        tags (list):
 
     Returns:
-
+        (Resource) A resource object
     """
     if rid:
         resource = get_resource_from_id(rid)
@@ -136,7 +136,7 @@ def lock_resource(rid=None, name=None, tags=None):
     # Prevent concurrent database access in a multi threaded execution context
     with thread_safe_lock:
 
-        resource = get_available_resource(rid=rid, name=name, tags=tags)
+        resource = get_an_available_resource(rid=rid, name=name, tags=tags)
 
         resource.lock_token = str(uuid4())
         resource.lock_details = u'Resource locked'
