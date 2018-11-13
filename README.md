@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/cpoisson/rent-a-bot.svg?branch=master)](https://travis-ci.org/cpoisson/rent-a-bot)
 [![codecov](https://codecov.io/gh/cpoisson/rent-a-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/cpoisson/rent-a-bot)
-[![pipeline status](https://gitlab.com/cpoisson/rent-a-bot/badges/master/pipeline.svg)](https://gitlab.com/cpoisson/rent-a-bot/commits/master)
-[![coverage report](https://gitlab.com/cpoisson/rent-a-bot/badges/master/coverage.svg)](https://gitlab.com/cpoisson/rent-a-bot/commits/master)
 
 ---
 
