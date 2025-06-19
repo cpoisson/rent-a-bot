@@ -6,18 +6,23 @@ This module contains rentabot logging facility.
 """
 
 import logging
-import daiquiri
-import daiquiri.formatter
+import sys
 
-LOG_FORMAT = "%(color)s%(asctime)s - %(name)s.%(funcName)s - %(message)s%(color_stop)s"
+LOG_FORMAT = "%(asctime)s - %(name)s.%(funcName)s - %(message)s"
 
-daiquiri.setup(
-    level=logging.INFO,
-    outputs=(
-        daiquiri.output.Stream(formatter=daiquiri.formatter.ColorFormatter(fmt=LOG_FORMAT)),
-    )
-)
+# Configure the root logger
+def setup_logging():
+    # Clear any existing handlers
+    logging.root.handlers = []
+    
+    # Add our stdout handler
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    logging.root.addHandler(handler)
+    logging.root.setLevel(logging.INFO)
 
+# Initialize logging on module import
+setup_logging()
 
 def get_logger(name, **kwargs):
     """
@@ -30,4 +35,4 @@ def get_logger(name, **kwargs):
         A logger object
     """
     # instantiate the logger object
-    return daiquiri.getLogger(name, **kwargs)
+    return logging.getLogger(name)

@@ -66,8 +66,7 @@ setup(
     # Run time Requirements
     install_requires=['flask',
                       'flask-sqlalchemy',
-                      'pyyaml',
-                      'daiquiri'],
+                      'pyyaml'],
 
     setup_requires=['pytest-runner'],
 
