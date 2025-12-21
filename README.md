@@ -1,35 +1,29 @@
 # Rent-A-Bot
 
-[![Build Status](https://travis-ci.org/cpoisson/rent-a-bot.svg?branch=master)](https://travis-ci.org/cpoisson/rent-a-bot)
-[![codecov](https://codecov.io/gh/cpoisson/rent-a-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/cpoisson/rent-a-bot)
-
----
-
 Rent-a-bot, your automation resource provider.
 
-Exclusive access to a static resource is a common problem in automation, rent-a-bot allows you to abstract your resources
-and lock them to prevent any concurrent access.
+Exclusive access to a static resource is a common problem in automation. Rent-a-bot allows you to abstract your resources and lock them to prevent any concurrent access.
 
 
 ## Purpose
 
-Rent-a-bot pursue the same objective as Jenkins [Lockable Resource Plugin](https://wiki.jenkins.io/display/JENKINS/Lockable+Resources+Plugin).
+Rent-a-bot pursues the same objective as Jenkins [Lockable Resource Plugin](https://wiki.jenkins.io/display/JENKINS/Lockable+Resources+Plugin).
 
-This latter works quite well, but only if you use... well... Jenkins.
+The plugin works quite well, but only if you use... well... Jenkins.
 
-Rent-A-Bot purpose is to fill the same needs in an environment where multiple automation applications exist.
+Rent-A-Bot's purpose is to fill the same needs in an environment where multiple automation applications exist.
 
-e.g.
+Examples:
 - Multiple Jenkins application servers
-- Mixed automation application, gitlab CI + Jenkins
-- Shared resources between humans and automates.
+- Mixed automation applications (e.g., GitHub Actions + Jenkins)
+- Shared resources between humans and automation systems
 
 
 ## What is a resource?
 
 A resource is defined by a **name** and the existence of a **lock token** indicating if the resource is locked.
 
-Optional available fields help you customize you resources with additional information:
+Optional available fields help you customize your resources with additional information:
 
 - Resource description
 - Lock description
@@ -55,11 +49,7 @@ brew install uv
 
 ### Installation
 
-Clone the repository from GitLab or GitHub
-
-```commandline
-git clone git@gitlab.com:cpoisson/rent-a-bot.git
-```
+Clone the repository from GitHub:
 
 ```commandline
 git clone git@github.com:cpoisson/rent-a-bot.git
@@ -101,9 +91,9 @@ flask run
 
 Alright, rent-a-bot is up and running.
 
-At this stage you can connect to the front end at http://127.0.0.1:5000/ (assuming your flask app listen to the port 500)
+At this stage you can connect to the front end at http://127.0.0.1:5000/ (assuming your Flask app listens on port 5000).
 
-You will notice that the resource list is empty (dang...), let's populate it
+You will notice that the resource list is empty (dang...), let's populate it.
 
 ### Populate the database
 
@@ -115,7 +105,7 @@ RENTABOT_RESOURCE_DESCRIPTOR="/absolute/path/to/your/resource/descriptor.yml"
 
 ### Resource descriptor
 
-The resource descriptor is a YAML file. It's purpose is to declare the resources you want to make available on rent-a-bot
+The resource descriptor is a YAML file. Its purpose is to declare the resources you want to make available on rent-a-bot.
 
 ```yaml
 # Resources Description
@@ -177,8 +167,8 @@ curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?tag\=cof
 ```
 
 **Notes:**
-- If multiple available resources it the criteria, the first available will be returned.
-- If criteria types are exclusive, resource id is prioritize over the name and tags, name is prioritize over tags.
+- If multiple available resources match the criteria, the first available will be returned.
+- If criteria types are exclusive, resource id is prioritized over the name and tags, and name is prioritized over tags.
 
 #### Unlock a resource
 POST /api/v1.0/resources/{resource_id}/unlock?lock-token={resource/lock/token}
@@ -190,11 +180,11 @@ curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/6/unlock\?lock
 **Note:** If the resource is already unlocked or the lock-token is not valid, an error code is returned.
 
 
-## How to tests
+## How to test
 
-### Tests implementation
+### Test implementation
 
-Unit tests are done using py.test and coverage
+Unit tests are done using pytest and coverage.
 
 ### How to run unit tests
 
