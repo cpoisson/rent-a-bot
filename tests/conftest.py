@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Tests Fixtures
-~~~~~~~~~~~~~~
+Tests Configuration
+~~~~~~~~~~~~~~~~~~~
 
-This module contains Rent-A-Bot tests fixtures.
+This module contains pytest configuration and shared fixtures.
 
 """
 import pytest
