@@ -5,3 +5,11 @@ rent_a_bot.egg-info/
 .cache/
 .coverage
 dist/
+
+# uv
+.venv/
+uv.lock
+__pycache__/
+*.py[cod]
+*$py.class
+build/
