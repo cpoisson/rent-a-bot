@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rent-a-bot"
+version = "0.1.0"
+description = "Rent-A-Bot, your automation resource provider."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Charles Poisson", email = "charles.poisson@gmail.com" }
+]
+keywords = ["Resource allocation application for automation"]
+classifiers = [
+    "Framework :: Flask",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Utilities",
+    "Operating System :: POSIX :: Linux",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.6"
+dependencies = [
+    "flask",
+    "flask-sqlalchemy",
+    "pyyaml",
+    "daiquiri",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.urls]
+Homepage = "https://github.com/cpoisson/rent-a-bot"
+Repository = "https://github.com/cpoisson/rent-a-bot"
+
+[tool.hatch.build.targets.wheel]
+packages = ["rentabot"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/rentabot",
+    "/tests",
+    "/MANIFEST.in",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+]
+
+[tool.pytest.ini_options]
+addopts = "-vv --showlocals --cov=. --cov-report term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+include = ["rentabot/*.py"]
+omit = [
+    ".eggs/*",
+    "tests/*",
+    "setup.py",
+]

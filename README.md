@@ -7,7 +7,7 @@
 
 Rent-a-bot, your automation resource provider.
 
-Exclusive access to a static resource is a common problem in automation, rent-a-bot allows you to abstract your resources 
+Exclusive access to a static resource is a common problem in automation, rent-a-bot allows you to abstract your resources
 and lock them to prevent any concurrent access.
 
 
@@ -25,7 +25,7 @@ e.g.
 - Shared resources between humans and automates.
 
 
-## What is a resource? 
+## What is a resource?
 
 A resource is defined by a **name** and the existence of a **lock token** indicating if the resource is locked.
 
@@ -39,6 +39,22 @@ Optional available fields help you customize you resources with additional infor
 
 ## How to install and run
 
+### Prerequisites
+
+This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable Python package management.
+
+Install uv:
+```commandline
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Or on macOS:
+```commandline
+brew install uv
+```
+
+### Installation
+
 Clone the repository from GitLab or GitHub
 
 ```commandline
@@ -49,17 +65,16 @@ git clone git@gitlab.com:cpoisson/rent-a-bot.git
 git clone git@github.com:cpoisson/rent-a-bot.git
 ```
 
-Create a virtual env (here using virtualenv wrapper)
-
+Navigate to the project directory:
 ```commandline
-mkvirtualenv rent-a-bot
-workon rent-a-bot
+cd rent-a-bot
 ```
 
-Install the package
+Install the package and dependencies using uv:
 
 ```commandline
-pip install .   # pip install -e . if you want to install it in editable mode
+uv sync              # Install dependencies and create virtual environment
+uv pip install -e .  # Install the package in editable mode
 ```
 
 Add Flask environment variables
@@ -72,8 +87,13 @@ export FLASK_DEBUG=true # If you need the debug mode
 
 And... run!
 
-
 ```commandline
+uv run flask run
+```
+
+Or activate the virtual environment and run directly:
+```commandline
+source .venv/bin/activate  # On Unix/macOS
 flask run
 ```
 
@@ -83,7 +103,7 @@ Alright, rent-a-bot is up and running.
 
 At this stage you can connect to the front end at http://127.0.0.1:5000/ (assuming your flask app listen to the port 500)
 
-You will notice that the resource list is empty (dang...), let's populate it 
+You will notice that the resource list is empty (dang...), let's populate it
 
 ### Populate the database
 
@@ -121,7 +141,7 @@ Once set, (re)start the flask application. The web view should be populated with
 
 ### RestFul API
 
-#### List resources 
+#### List resources
 GET /api/v1.0/resources
 
 e.g.
@@ -129,7 +149,7 @@ e.g.
 curl -X GET -i http://localhost:5000/rentabot/api/v1.0/resources
 ```
 
-#### Access to a given resource 
+#### Access to a given resource
 GET /api/v1.0/resources/{resource_id}
 
 e.g.
@@ -168,7 +188,7 @@ curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/6/unlock\?lock
 ```
 
 **Note:** If the resource is already unlocked or the lock-token is not valid, an error code is returned.
-    
+
 
 ## How to tests
 
@@ -179,7 +199,13 @@ Unit tests are done using py.test and coverage
 ### How to run unit tests
 
 ```commandline
-python setup.py test
+uv run pytest
+```
+
+Or with the virtual environment activated:
+```commandline
+source .venv/bin/activate
+pytest
 ```
 
 ---

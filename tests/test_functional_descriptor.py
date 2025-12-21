@@ -36,8 +36,6 @@ class TestInitResourcesFromDescriptor(object):
     So that: The application run from scratch with static resources available.
     """
 
-    @pytest.mark.skipif(os.environ.get('RENTABOT_RESOURCE_DESCRIPTOR') is None,
-                        reason='No resource descriptor provided, skipping test.')
     def test_init_db_with_configuration_file(self, app):
         """
         Title: Init DB with a resource descriptor file
@@ -48,11 +46,16 @@ class TestInitResourcesFromDescriptor(object):
         When: Starting rent a bot
         Then: The database is created with the resources described in the configuration file
         """
+        # Use the resource descriptor from test assets
+        test_dir = os.path.dirname(os.path.abspath(__file__))
+        descriptor_path = os.path.join(test_dir, 'assets', 'resource_descriptor.yaml')
 
-        descriptor_path = os.path.abspath(os.environ['RENTABOT_RESOURCE_DESCRIPTOR'])
+        # Populate the database from the descriptor file
+        from rentabot.controllers import populate_database_from_file
+        populate_database_from_file(descriptor_path)
 
         with open(descriptor_path, 'r') as f:
-            input_resources = yaml.load(f)
+            input_resources = yaml.load(f, Loader=yaml.SafeLoader)
 
         # Request the available resources
         response = app.get('/rentabot/api/v1.0/resources')

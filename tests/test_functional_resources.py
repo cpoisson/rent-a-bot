@@ -180,10 +180,11 @@ class TestLockUnlockResourceById(object):
         reset_database()
 
         # Add a resource to the database
-
-        db.session.add(Resource(name="resource",
-                                description="I'm a resource!"))
-        db.session.commit()
+        from rentabot import app as flask_app
+        with flask_app.app_context():
+            db.session.add(Resource(name="resource",
+                                    description="I'm a resource!"))
+            db.session.commit()
 
         # Lock the first resource
         response = app.post('/rentabot/api/v1.0/resources/1/lock')
@@ -313,9 +314,11 @@ class TestLockUnlockResourceById(object):
         reset_database()
 
         # Add a resource to the database
-        db.session.add(Resource(name="resource",
-                                description="I'm a resource!"))
-        db.session.commit()
+        from rentabot import app as flask_app
+        with flask_app.app_context():
+            db.session.add(Resource(name="resource",
+                                    description="I'm a resource!"))
+            db.session.commit()
 
         # Unlock the first resource
         response = app.post('/rentabot/api/v1.0/resources/1/unlock')
@@ -339,9 +342,11 @@ class TestLockUnlockResourceById(object):
         reset_database()
 
         # Add a resource to the database
-        db.session.add(Resource(name="resource",
-                                description="I'm a resource!"))
-        db.session.commit()
+        from rentabot import app as flask_app
+        with flask_app.app_context():
+            db.session.add(Resource(name="resource",
+                                    description="I'm a resource!"))
+            db.session.commit()
 
         # Unlock an arbitrary resource 1000000, far away
         resource_id = 100000

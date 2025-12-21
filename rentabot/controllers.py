@@ -191,37 +191,40 @@ def populate_database_from_file(resource_descriptor):
     logger.info("Populating the database. Descriptor : {}".format(resource_descriptor))
 
     with open(resource_descriptor, "r") as f:
-        resources = yaml.load(f)
+        resources = yaml.load(f, Loader=yaml.SafeLoader)
 
     if resources is None:
         raise ResourceDescriptorIsEmpty(resource_descriptor)
 
-    db.drop_all()
-    db.create_all()
+    from rentabot import app
 
-    for resource_name in list(resources):
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
 
-        logger.debug("Add resource : {}".format(resource_name))
+        for resource_name in list(resources):
 
-        try:
-            description = resources[resource_name]['description']
-        except KeyError:
-            description = None
+            logger.debug("Add resource : {}".format(resource_name))
 
-        try:
-            endpoint = resources[resource_name]['endpoint']
-        except KeyError:
-            endpoint = None
+            try:
+                description = resources[resource_name]['description']
+            except KeyError:
+                description = None
 
-        try:
-            tags = resources[resource_name]['tags']
-        except KeyError:
-            tags = None
+            try:
+                endpoint = resources[resource_name]['endpoint']
+            except KeyError:
+                endpoint = None
 
-        db.session.add(Resource(resource_name,
-                                description=description,
-                                endpoint=endpoint,
-                                tags=tags))
+            try:
+                tags = resources[resource_name]['tags']
+            except KeyError:
+                tags = None
+
+            db.session.add(Resource(resource_name,
+                                    description=description,
+                                    endpoint=endpoint,
+                                    tags=tags))
         db.session.commit()
 
     return list(resources)
