@@ -2,6 +2,7 @@
 
 Your automation resource provider.
 """
+
 try:
     from importlib.metadata import version
 except ImportError:

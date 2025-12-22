@@ -47,6 +47,24 @@ def test_init_db_with_an_empty_file_descriptor(tmpdir):
         pass  # It's the expected Exception
 
 
+def test_resource_descriptor_exception_without_message():
+    """
+    Title: ResourceDescriptorException with default message
+
+    Given: A ResourceDescriptorException is created without a message
+    When: The exception is initialized
+    Then: A default message should be set
+    """
+    from rentabot.exceptions import ResourceDescriptorException
+
+    file_descriptor = "/tmp/test.yml"
+    exc = ResourceDescriptorException(file_descriptor)
+
+    # Check that default message is set
+    assert exc.message == f"An error occurred with resource descriptor: {file_descriptor}"
+    assert exc.file_descriptor == file_descriptor
+
+
 def test_init_db_with_duplicated_resource_entry():
     """
     Title: Duplicated resource entry MUST except

@@ -19,7 +19,6 @@ class TestUserStory(object):
 
 """
 
-
 import pytest
 from db_utils import create_resources, create_resources_with_tags, reset_database
 
@@ -227,9 +226,7 @@ class TestLockUnlockResourceById:
         lock_token = self.test_lock_resource(app)
 
         # Unlock the first resource
-        response = app.post(
-            f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}"
-        )
+        response = app.post(f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -262,9 +259,7 @@ class TestLockUnlockResourceById:
         lock_token = "verybadlocktokenbadbadbad"
 
         # Unlock the first resource
-        response = app.post(
-            f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}"
-        )
+        response = app.post(f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -475,7 +470,9 @@ class TestLockResourceByCriteria:
         # Lock first multipurpose resource
         response1 = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
         if response1.status_code != 200:
-            msg = f"First lock failed: status code 200 was awaited, received {response1.status_code}."
+            msg = (
+                f"First lock failed: status code 200 was awaited, received {response1.status_code}."
+            )
             pytest.fail(msg)
 
         # Lock second multipurpose resource
@@ -491,6 +488,48 @@ class TestLockResourceByCriteria:
         if response3.status_code != 403:
             msg = f"Oopsie, status code 403 was awaited, received {response3.status_code}."
             pytest.fail(msg)
+
+    def test_lock_resource_by_tags_with_resource_without_tags(self, app):
+        """
+        Title: Lock a resource by tags when some resources have no tags
+
+        Given: Multiple resources exist, some with tags and some without
+        When: Requesting a lock on a resource using tags
+        Then: Only resources with matching tags are considered
+        """
+        # Reset Database
+        reset_database()
+
+        # Add resources with tags
+        create_resources_with_tags()
+
+        # Add a resource without tags
+        import rentabot.models
+        from rentabot.models import Resource, resources_by_id, resources_by_name
+
+        resource = Resource(
+            id=rentabot.models.next_resource_id,
+            name="resource-without-tags",
+            description="I have no tags",
+            tags=None,
+        )
+        resources_by_id[resource.id] = resource
+        resources_by_name[resource.name] = resource
+        rentabot.models.next_resource_id += 1
+
+        # Lock a resource with arduino tag (should not select the one without tags)
+        tag = "arduino"
+        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+
+        # Should be a 200 OK
+        if response.status_code != 200:
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
+            pytest.fail(msg)
+
+        # Verify the locked resource has tags
+        locked_resource = response.json()["resource"]
+        if locked_resource["tags"] is None:
+            pytest.fail("Resource without tags should not have been selected")
 
     def test_lock_resource_by_name(self, app):
         """
@@ -533,9 +572,7 @@ class TestLockResourceByCriteria:
         returned_name = response_dict["resource"]["name"]
 
         if returned_name != resource_name:
-            pytest.fail(
-                f"{returned_name} is not the awaited resource name {resource_name}."
-            )
+            pytest.fail(f"{returned_name} is not the awaited resource name {resource_name}.")
 
         # Retry to lock the same name (only one is available here)
 
