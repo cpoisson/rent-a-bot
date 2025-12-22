@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 rentabot.exceptions
 ~~~~~~~~~~~~~~~~~~~
@@ -71,7 +70,7 @@ class ResourceDescriptorException(Exception):
 
     def __init__(self, file_descriptor, message=None):
         if message is None:
-            self.message = "An error occurred with resource descriptor: {}".format(file_descriptor)
+            self.message = f"An error occurred with resource descriptor: {file_descriptor}"
         else:
             self.message = message
         self.file_descriptor = file_descriptor
@@ -81,5 +80,5 @@ class ResourceDescriptorIsEmpty(ResourceDescriptorException):
     """The resource descriptor does not contain any resources"""
 
     def __init__(self, file_descriptor):
-        msg = "The resource descriptor is empty : {}".format(file_descriptor)
+        msg = f"The resource descriptor is empty : {file_descriptor}"
         ResourceDescriptorException.__init__(self, file_descriptor, message=msg)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests Fixtures
 ~~~~~~~~~~~~~~
@@ -9,6 +8,7 @@ This module contains Rent-A-Bot tests fixtures.
 
 import pytest
 from fastapi.testclient import TestClient
+
 import rentabot.models
 
 

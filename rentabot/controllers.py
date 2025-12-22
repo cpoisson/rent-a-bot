@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 rentabot.controllers
 ~~~~~~~~~~~~~~~~~~~~
@@ -6,21 +5,25 @@ rentabot.controllers
 This module contains rent-a-bot functions related to in-memory resource manipulation.
 """
 
-from rentabot.models import (
-    Resource,
-    resources_by_id,
-    resources_by_name,
-    resource_lock,
-    next_resource_id,
-)
-from rentabot.exceptions import ResourceException, ResourceNotFound
-from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
-from rentabot.exceptions import ResourceDescriptorIsEmpty
-from rentabot.logger import get_logger
-
 from uuid import uuid4
+
 import yaml
 
+from rentabot.exceptions import (
+    InvalidLockToken,
+    ResourceAlreadyLocked,
+    ResourceAlreadyUnlocked,
+    ResourceDescriptorIsEmpty,
+    ResourceException,
+    ResourceNotFound,
+)
+from rentabot.logger import get_logger
+from rentabot.models import (
+    Resource,
+    resource_lock,
+    resources_by_id,
+    resources_by_name,
+)
 
 logger = get_logger(__name__)
 
@@ -42,7 +45,7 @@ def get_resource_from_id(resource_id):
     resource = resources_by_id.get(resource_id)
 
     if resource is None:
-        logger.warning("Resource not found. Id : {}".format(resource_id))
+        logger.warning(f"Resource not found. Id : {resource_id}")
         raise ResourceNotFound(message="Resource not found", payload={"resource_id": resource_id})
     return resource
 
@@ -59,7 +62,7 @@ def get_resource_from_name(resource_name):
     resource = resources_by_name.get(resource_name)
 
     if resource is None:
-        logger.warning("Resource not found. Name : {}".format(resource_name))
+        logger.warning(f"Resource not found. Name : {resource_name}")
         raise ResourceNotFound(
             message="Resource not found", payload={"resource_name": resource_name}
         )
@@ -86,7 +89,7 @@ def get_resources_from_tags(resource_tags):
             resources.append(resource)
 
     if not resources:
-        logger.warning("Resources not found. Tag(s) : {}".format(resource_tags))
+        logger.warning(f"Resources not found. Tag(s) : {resource_tags}")
         raise ResourceNotFound(
             message="No resource found matching the tag(s)", payload={"tags": resource_tags}
         )
@@ -117,7 +120,7 @@ def get_an_available_resource(rid=None, name=None, tags=None):
         raise ResourceException(message="Bad Request")
 
     if resource.lock_token is not None:
-        logger.warning("Resource already locked. Id : {}".format(resource.id))
+        logger.warning(f"Resource already locked. Id : {resource.id}")
         raise ResourceAlreadyLocked(
             message="Cannot lock the requested resource, resource(s) already locked",
             payload={"id": rid, "name": name, "tags": tags},
@@ -149,7 +152,7 @@ def lock_resource(rid=None, name=None, tags=None):
         resources_by_id[updated_resource.id] = updated_resource
         resources_by_name[updated_resource.name] = updated_resource
 
-        logger.info("Resource locked. Id : {}".format(updated_resource.id))
+        logger.info(f"Resource locked. Id : {updated_resource.id}")
 
         return updated_resource.lock_token, updated_resource
 
@@ -167,14 +170,12 @@ def unlock_resource(resource_id, lock_token):
     resource = get_resource_from_id(resource_id)
 
     if resource.lock_token is None:
-        logger.warning("Resource already unlocked. Id : {}".format(resource_id))
+        logger.warning(f"Resource already unlocked. Id : {resource_id}")
         raise ResourceAlreadyUnlocked(
             message="Resource is already unlocked", payload={"resource_id": resource_id}
         )
     if lock_token != resource.lock_token:
-        msg = "Incorrect lock token. Id : {}, lock-token : {}, resource lock-token : {}".format(
-            resource_id, lock_token, resource.lock_token
-        )
+        msg = f"Incorrect lock token. Id : {resource_id}, lock-token : {lock_token}, resource lock-token : {resource.lock_token}"
         logger.warning(msg)
         raise InvalidLockToken(
             message="Cannot unlock resource, the lock token is not valid.",
@@ -190,7 +191,7 @@ def unlock_resource(resource_id, lock_token):
     resources_by_id[updated_resource.id] = updated_resource
     resources_by_name[updated_resource.name] = updated_resource
 
-    logger.info("Resource unlocked. Id : {}".format(resource_id))
+    logger.info(f"Resource unlocked. Id : {resource_id}")
 
 
 def populate_database_from_file(resource_descriptor):
@@ -203,17 +204,17 @@ def populate_database_from_file(resource_descriptor):
         (list) resources name added
 
     """
-    logger.info("Populating resources from descriptor : {}".format(resource_descriptor))
+    logger.info(f"Populating resources from descriptor : {resource_descriptor}")
 
-    with open(resource_descriptor, "r") as f:
+    with open(resource_descriptor) as f:
         resources = yaml.load(f, Loader=yaml.SafeLoader)
 
     if resources is None:
         raise ResourceDescriptorIsEmpty(resource_descriptor)
 
     # Import here to avoid circular dependency
-    from rentabot.models import resources_by_id, resources_by_name
     import rentabot.models
+    from rentabot.models import resources_by_id, resources_by_name
 
     # Clear existing resources
     resources_by_id.clear()
@@ -221,7 +222,7 @@ def populate_database_from_file(resource_descriptor):
     rentabot.models.next_resource_id = 1
 
     for resource_name in list(resources):
-        logger.debug("Add resource : {}".format(resource_name))
+        logger.debug(f"Add resource : {resource_name}")
 
         description = resources[resource_name].get("description")
         endpoint = resources[resource_name].get("endpoint")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 rentabot.models
 ~~~~~~~~~~~~~~~
@@ -6,9 +5,10 @@ rentabot.models
 This module contains rent-a-bot in-memory resource model.
 """
 
-from pydantic import BaseModel
-from typing import Optional
 import threading
+from typing import Optional
+
+from pydantic import BaseModel
 
 
 class Resource(BaseModel):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Resource Descriptor Functional Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -7,7 +6,9 @@ This module contains Rent-A-Bot resource descriptor unit tests.
 """
 
 import os
+
 import pytest
+
 from rentabot.controllers import populate_database_from_file
 from rentabot.exceptions import ResourceDescriptorIsEmpty
 

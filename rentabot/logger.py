@@ -1,4 +1,3 @@
-# coding: utf-8
 """
 rentabot.logging
 
@@ -6,6 +5,7 @@ This module contains rentabot logging facility.
 """
 
 import logging
+
 import daiquiri
 import daiquiri.formatter
 

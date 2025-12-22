@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 rentabot.main
 ~~~~~~~~~~~~~
@@ -7,10 +6,11 @@ This module contains rent-a-bot FastAPI application.
 """
 
 import os
-from typing import List, Optional
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, HTMLResponse
+from typing import List, Optional
+
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict
 
@@ -18,15 +18,15 @@ from rentabot.controllers import (
     get_all_ressources,
     get_resource_from_id,
     lock_resource,
-    unlock_resource,
     populate_database_from_file,
+    unlock_resource,
 )
 from rentabot.exceptions import (
-    ResourceException,
-    ResourceNotFound,
+    InvalidLockToken,
     ResourceAlreadyLocked,
     ResourceAlreadyUnlocked,
-    InvalidLockToken,
+    ResourceException,
+    ResourceNotFound,
 )
 from rentabot.logger import get_logger
 

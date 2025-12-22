@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Resource Descriptor Functional Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,15 +19,13 @@ class TestUserStory(object):
 
 """
 
-import pytest
-import yaml
-import json
 import os
 
-from fixtures import app
+import pytest
+import yaml
 
 
-class TestInitResourcesFromDescriptor(object):
+class TestInitResourcesFromDescriptor:
     """
     Title: Init the database with a YAML configuration file at startup
 
@@ -56,7 +53,7 @@ class TestInitResourcesFromDescriptor(object):
 
         populate_database_from_file(descriptor_path)
 
-        with open(descriptor_path, "r") as f:
+        with open(descriptor_path) as f:
             input_resources = yaml.load(f, Loader=yaml.SafeLoader)
 
         # Request the available resources
@@ -64,7 +61,7 @@ class TestInitResourcesFromDescriptor(object):
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         # Should contains the count of resources expected
@@ -73,7 +70,5 @@ class TestInitResourcesFromDescriptor(object):
         res_count_expected = len(list(input_resources))
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
-            msg = "Oopsie, {} resources were expected, received {}.".format(
-                res_count_expected, res_count_returned
-            )
+            msg = f"Oopsie, {res_count_expected} resources were expected, received {res_count_returned}."
             pytest.fail(msg)

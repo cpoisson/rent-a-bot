@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Rent-A-Bot
 
 Your automation resource provider.
@@ -12,5 +11,5 @@ from rentabot.logger import get_logger
 logger = get_logger(__name__)
 
 # Import models and controllers
-import rentabot.models
 import rentabot.controllers
+import rentabot.models

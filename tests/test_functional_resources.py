@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Resources Functional Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,18 +19,14 @@ class TestUserStory(object):
 
 """
 
+
 import pytest
-import rentabot
+from db_utils import create_resources, create_resources_with_tags, reset_database
+
 from rentabot.models import Resource
 
-import os
-import json
 
-from fixtures import app
-from db_utils import reset_database, create_resources, create_resources_with_tags
-
-
-class TestGetResources(object):
+class TestGetResources:
     """
     Title: Retrieve the existing resources.
 
@@ -62,7 +57,7 @@ class TestGetResources(object):
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         # Should contains the count of resources expected
@@ -70,9 +65,7 @@ class TestGetResources(object):
 
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
-            msg = "Oopsie, {} resources were expected, received {}.".format(
-                res_count_expected, res_count_returned
-            )
+            msg = f"Oopsie, {res_count_expected} resources were expected, received {res_count_returned}."
             pytest.fail(msg)
 
     def test_get_resources_no_criteria_no_resource(self, app):
@@ -92,7 +85,7 @@ class TestGetResources(object):
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         res_count_expected = 0
@@ -101,9 +94,7 @@ class TestGetResources(object):
 
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
-            msg = "Oopsie, {} resources were expected, received {}.".format(
-                res_count_expected, res_count_returned
-            )
+            msg = f"Oopsie, {res_count_expected} resources were expected, received {res_count_returned}."
             pytest.fail(msg)
 
     def test_get_a_resource(self, app):
@@ -127,7 +118,7 @@ class TestGetResources(object):
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         # Should contains 0 resources
@@ -154,14 +145,14 @@ class TestGetResources(object):
 
         # Should be a 404 Not Found
         if response.status_code != 404:
-            msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
             pytest.fail(msg)
         # Check that the 404 returned is the app 404 and not a generic one.
         response_json = response.json()
         assert response_json["resource_id"] == 1000
 
 
-class TestLockUnlockResourceById(object):
+class TestLockUnlockResourceById:
     """
     Title: Lock/Unlock a resource by Id.
 
@@ -183,8 +174,8 @@ class TestLockUnlockResourceById(object):
         reset_database()
 
         # Add a resource to memory
-        from rentabot.models import resources_by_id, resources_by_name
         import rentabot.models
+        from rentabot.models import resources_by_id, resources_by_name
 
         resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
@@ -196,7 +187,7 @@ class TestLockUnlockResourceById(object):
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         # Response should contain a lock token
@@ -237,12 +228,12 @@ class TestLockUnlockResourceById(object):
 
         # Unlock the first resource
         response = app.post(
-            "/rentabot/api/v1.0/resources/1/unlock?lock-token={}".format(lock_token)
+            f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}"
         )
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         # Resource should be unlocked
@@ -272,12 +263,12 @@ class TestLockUnlockResourceById(object):
 
         # Unlock the first resource
         response = app.post(
-            "/rentabot/api/v1.0/resources/1/unlock?lock-token={}".format(lock_token)
+            f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}"
         )
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
-            msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         # Resource should be still locked
@@ -306,7 +297,7 @@ class TestLockUnlockResourceById(object):
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
-            msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
     def test_unlock_resource_already_unlocked(self, app):
@@ -323,8 +314,8 @@ class TestLockUnlockResourceById(object):
         reset_database()
 
         # Add a resource to memory
-        from rentabot.models import resources_by_id, resources_by_name
         import rentabot.models
+        from rentabot.models import resources_by_id, resources_by_name
 
         resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
@@ -336,7 +327,7 @@ class TestLockUnlockResourceById(object):
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
-            msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
     @pytest.mark.parametrize("cmd", ["lock", "unlock"])
@@ -353,8 +344,8 @@ class TestLockUnlockResourceById(object):
         reset_database()
 
         # Add a resource to memory
-        from rentabot.models import resources_by_id, resources_by_name
         import rentabot.models
+        from rentabot.models import resources_by_id, resources_by_name
 
         resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
@@ -363,11 +354,11 @@ class TestLockUnlockResourceById(object):
 
         # Unlock an arbitrary resource 1000000, far away
         resource_id = 100000
-        response = app.post("/rentabot/api/v1.0/resources/{}/{}".format(resource_id, cmd))
+        response = app.post(f"/rentabot/api/v1.0/resources/{resource_id}/{cmd}")
 
         # Response should be a 404 Not Found
         if response.status_code != 404:
-            msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         # Check that the 404 returned is the app 404 and not a generic one.
@@ -375,7 +366,7 @@ class TestLockUnlockResourceById(object):
         assert response_json["resource_id"] == resource_id
 
 
-class TestLockResourceByCriteria(object):
+class TestLockResourceByCriteria:
     """
     Title: Log a resource by criteria (resource Id, name or tags)
 
@@ -402,11 +393,11 @@ class TestLockResourceByCriteria(object):
         # Lock an arduino with leds
         tag_1 = "arduino"
         tag_2 = "leds"
-        response = app.post("/rentabot/api/v1.0/resources/lock?tag={}&tag={}".format(tag_1, tag_2))
+        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag_1}&tag={tag_2}")
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         response_dict = response.json()
@@ -426,17 +417,17 @@ class TestLockResourceByCriteria(object):
         resource_tags = response_dict["resource"]["tags"].split()
 
         if tag_1 not in resource_tags:
-            pytest.fail("{} not in resource tags {}".format(tag_1, resource_tags))
+            pytest.fail(f"{tag_1} not in resource tags {resource_tags}")
         if tag_2 not in resource_tags:
-            pytest.fail("{} not in resource tags {}".format(tag_1, resource_tags))
+            pytest.fail(f"{tag_1} not in resource tags {resource_tags}")
 
         # Retry to lock the same tags (only one is available here)
 
-        response = app.post("/rentabot/api/v1.0/resources/lock?tag={}&tag={}".format(tag_1, tag_2))
+        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag_1}&tag={tag_2}")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
-            msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
     def test_lock_resource_by_tag_not_exists(self, app):
@@ -456,11 +447,11 @@ class TestLockResourceByCriteria(object):
         # Lock an arduino with leds
         tag_1 = "arduino"
         tag_2 = "acapulco"
-        response = app.post("/rentabot/api/v1.0/resources/lock?tag={}&tag={}".format(tag_1, tag_2))
+        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag_1}&tag={tag_2}")
 
         # Should be a 404
         if response.status_code != 404:
-            msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
     def test_lock_resource_by_name(self, app):
@@ -480,11 +471,11 @@ class TestLockResourceByCriteria(object):
 
         # Lock an arduino with leds
         resource_name = "arduino-1"
-        response = app.post("/rentabot/api/v1.0/resources/lock?name={}".format(resource_name))
+        response = app.post(f"/rentabot/api/v1.0/resources/lock?name={resource_name}")
 
         # Should be a 200 OK
         if response.status_code != 200:
-            msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
         response_dict = response.json()
@@ -505,16 +496,16 @@ class TestLockResourceByCriteria(object):
 
         if returned_name != resource_name:
             pytest.fail(
-                "{} is not the awaited resource name {}.".format(returned_name, resource_name)
+                f"{returned_name} is not the awaited resource name {resource_name}."
             )
 
         # Retry to lock the same name (only one is available here)
 
-        response = app.post("/rentabot/api/v1.0/resources/lock?name={}".format(resource_name))
+        response = app.post(f"/rentabot/api/v1.0/resources/lock?name={resource_name}")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
-            msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
     def test_lock_resource_by_name_not_exists(self, app):
@@ -536,7 +527,7 @@ class TestLockResourceByCriteria(object):
 
         # Should be a 404
         if response.status_code != 404:
-            msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
     def test_lock_resource_by_unsupported_criteria_type(self, app):
@@ -558,5 +549,5 @@ class TestLockResourceByCriteria(object):
 
         # Should be a 400
         if response.status_code != 400:
-            msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
+            msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
             pytest.fail(msg)
