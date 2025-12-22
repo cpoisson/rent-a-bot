@@ -67,37 +67,34 @@ uv sync              # Install dependencies and create virtual environment
 uv pip install -e .  # Install the package in editable mode
 ```
 
-Add Flask environment variables
+## How to run
+
+Start the FastAPI server:
 
 ```commandline
-export FLASK_APP=rentabot
+# With uvicorn directly
+uvicorn rentabot.main:app --reload --port 8000
 
-export FLASK_DEBUG=true # If you need the debug mode
+# Or with uv
+uv run uvicorn rentabot.main:app --reload --port 8000
 ```
 
-And... run!
-
-```commandline
-uv run flask run
-```
-
-Or activate the virtual environment and run directly:
-```commandline
-source .venv/bin/activate  # On Unix/macOS
-flask run
-```
+The API will be available at:
+- **Main API**: http://127.0.0.1:8000/
+- **Interactive API Docs**: http://127.0.0.1:8000/docs
+- **ReDoc**: http://127.0.0.1:8000/redoc
 
 ## How to use it
 
 Alright, rent-a-bot is up and running.
 
-At this stage you can connect to the front end at http://127.0.0.1:5000/ (assuming your Flask app listens on port 5000).
+At this stage you can connect to the web interface at http://127.0.0.1:8000/ or explore the interactive API documentation at http://127.0.0.1:8000/docs.
 
 You will notice that the resource list is empty (dang...), let's populate it.
 
-### Populate the database
+### Populate the resources
 
-You will need a resource descriptor file to populate the database at startup.
+You will need a resource descriptor file to populate the resources at startup.
 
 ```commandline
 RENTABOT_RESOURCE_DESCRIPTOR="/absolute/path/to/your/resource/descriptor.yml"
@@ -127,20 +124,26 @@ another-resource:
     tags: ""
 ```
 
-Once set, (re)start the flask application. The web view should be populated with your resources.
+Once set, (re)start the application with the environment variable:
 
-### RestFul API
+```commandline
+RENTABOT_RESOURCE_DESCRIPTOR=/path/to/your/resources.yaml uvicorn rentabot.main:app --reload --port 8000
+```
+
+The web view should be populated with your resources.
+
+### RESTful API
 
 #### List resources
-GET /api/v1.0/resources
+GET /rentabot/api/v1.0/resources
 
 e.g.
 ```commandline
-curl -X GET -i http://localhost:5000/rentabot/api/v1.0/resources
+curl -X GET -i http://localhost:8000/rentabot/api/v1.0/resources
 ```
 
 #### Access to a given resource
-GET /api/v1.0/resources/{resource_id}
+GET /rentabot/api/v1.0/resources/{resource_id}
 
 e.g.
 ```commandline
@@ -202,13 +205,11 @@ pytest
 
 ## Helpful documentation used to design this application
 
-- [Designing a RESTful API with Python and Flask](https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask)
-- [Testing Flask Applications](http://flask.pocoo.org/docs/0.12/testing/#testing)
-- [Flask Project Template](https://github.com/xen/flask-project-template)
-- [Flask SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.1/quickstart/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Pydantic Documentation](https://docs.pydantic.dev/)
 - [Put versus Post](https://knpuniversity.com/screencast/rest/put-versus-post)
 - [Best practice for a pragmatic restful API](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api#ssl)
-- [Implementing a RESTful Web API with Python & Flask](http://blog.luisrei.com/articles/flaskrest.html)
 - [HTTP status code](https://restpatterns.mindtouch.us/HTTP_Status_Codes)
+- [OpenAPI Specification](https://swagger.io/specification/)
 - [Implementing API Exceptions](http://flask.pocoo.org/docs/0.12/patterns/apierrors/)
 - [The Hitchhiker's Guide To Python](http://docs.python-guide.org/en/latest/)

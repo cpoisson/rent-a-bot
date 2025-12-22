@@ -3,51 +3,42 @@
 rentabot.models
 ~~~~~~~~~~~~~~~
 
-This module contains rent-a-bot database model.
+This module contains rent-a-bot in-memory resource model.
 """
 
 
-from rentabot import app
-from flask_sqlalchemy import SQLAlchemy
-import os
-
-# Set database
-db_path = '/tmp/rent-a-bot.sqlite'
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
+from pydantic import BaseModel
+from typing import Optional
+import threading
 
 
-class Resource(db.Model):
-    """ Resource class.
+class Resource(BaseModel):
+    """Resource class."""
 
-    """
-    id = db.Column(db.Integer, primary_key=True)            # Id
-    name = db.Column(db.String(80), unique=True)            # Unique Resource name
-    description = db.Column(db.String(160))                 # Resource description
-    lock_token = db.Column(db.String(80))                   # Resource lock token
-    lock_details = db.Column(db.String(160))                # Resource lock details
-    endpoint = db.Column(db.String(160))                    # Resource endpoint (e.g. an IP address)
-    tags = db.Column(db.String(160))                        # Resource tags
-
-    def __init__(self, name, endpoint=None, description=None, tags=None):
-        self.name = name
-        self.description = description
-        self.lock_details = u'Resource is available'
-        self.endpoint = endpoint
-        self.tags = tags
+    id: int
+    name: str
+    description: Optional[str] = None
+    lock_token: Optional[str] = None
+    lock_details: str = 'Resource is available'
+    endpoint: Optional[str] = None
+    tags: Optional[str] = None
 
     @property
     def dict(self):
-        rv = dict()
-        rv['id'] = self.id
-        rv['name'] = self.name
-        rv['description'] = self.description
-        rv['lock-token'] = self.lock_token
-        rv['lock-details'] = self.lock_details
-        rv['endpoint'] = self.endpoint
-        rv['tags'] = self.tags
-        return rv
+        """Compatibility property for existing code."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'lock-token': self.lock_token,
+            'lock-details': self.lock_details,
+            'endpoint': self.endpoint,
+            'tags': self.tags
+        }
 
+
+# In-memory storage (replaces database)
+resources_by_id: dict[int, Resource] = {}
+resources_by_name: dict[str, Resource] = {}
+resource_lock = threading.Lock()
+next_resource_id = 1

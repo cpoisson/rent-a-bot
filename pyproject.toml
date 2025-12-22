@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rent-a-bot"
-version = "0.1.0"
+version = "0.2.0"
 description = "Rent-A-Bot, your automation resource provider."
 readme = "README.md"
 license = { text = "MIT" }
@@ -13,7 +13,7 @@ authors = [
 ]
 keywords = ["Resource allocation application for automation"]
 classifiers = [
-    "Framework :: Flask",
+    "Framework :: FastAPI",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
@@ -28,22 +28,26 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 dependencies = [
-    "flask",
-    "flask-sqlalchemy",
+    "fastapi",
+    "uvicorn[standard]",
+    "jinja2",
     "pyyaml",
     "daiquiri",
+    "pydantic>=2.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "pytest-cov",
+    "httpx",
 ]
 test = [
     "pytest",
     "pytest-cov",
+    "httpx",
 ]
 
 [project.urls]
@@ -57,20 +61,15 @@ packages = ["rentabot"]
 include = [
     "/rentabot",
     "/tests",
-    "/MANIFEST.in",
     "/README.md",
     "/LICENSE",
     "/CHANGELOG.md",
 ]
 
 [tool.pytest.ini_options]
-addopts = "-vv --showlocals --cov=. --cov-report term-missing"
+addopts = "-vv --showlocals --cov=rentabot --cov-report term-missing"
 testpaths = ["tests"]
 
 [tool.coverage.run]
 include = ["rentabot/*.py"]
-omit = [
-    ".eggs/*",
-    "tests/*",
-    "setup.py",
-]
+omit = [".eggs/*", "tests/*"]
