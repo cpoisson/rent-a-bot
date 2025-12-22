@@ -19,6 +19,7 @@ class TestUserStory(object):
         some test...
 
 """
+
 import pytest
 import yaml
 import json
@@ -48,17 +49,18 @@ class TestInitResourcesFromDescriptor(object):
         """
         # Use the resource descriptor from test assets
         test_dir = os.path.dirname(os.path.abspath(__file__))
-        descriptor_path = os.path.join(test_dir, 'assets', 'resource_descriptor.yaml')
+        descriptor_path = os.path.join(test_dir, "assets", "resource_descriptor.yaml")
 
         # Populate the database from the descriptor file
         from rentabot.controllers import populate_database_from_file
+
         populate_database_from_file(descriptor_path)
 
-        with open(descriptor_path, 'r') as f:
+        with open(descriptor_path, "r") as f:
             input_resources = yaml.load(f, Loader=yaml.SafeLoader)
 
         # Request the available resources
-        response = app.get('/rentabot/api/v1.0/resources')
+        response = app.get("/rentabot/api/v1.0/resources")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -66,11 +68,12 @@ class TestInitResourcesFromDescriptor(object):
             pytest.fail(msg)
 
         # Should contains the count of resources expected
-        resources = response.json()['resources']
+        resources = response.json()["resources"]
 
         res_count_expected = len(list(input_resources))
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
-            msg = "Oopsie, {} resources were expected, received {}.".format(res_count_expected,
-                                                                            res_count_returned)
+            msg = "Oopsie, {} resources were expected, received {}.".format(
+                res_count_expected, res_count_returned
+            )
             pytest.fail(msg)

@@ -6,8 +6,13 @@ rentabot.controllers
 This module contains rent-a-bot functions related to in-memory resource manipulation.
 """
 
-
-from rentabot.models import Resource, resources_by_id, resources_by_name, resource_lock, next_resource_id
+from rentabot.models import (
+    Resource,
+    resources_by_id,
+    resources_by_name,
+    resource_lock,
+    next_resource_id,
+)
 from rentabot.exceptions import ResourceException, ResourceNotFound
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
 from rentabot.exceptions import ResourceDescriptorIsEmpty
@@ -38,8 +43,7 @@ def get_resource_from_id(resource_id):
 
     if resource is None:
         logger.warning("Resource not found. Id : {}".format(resource_id))
-        raise ResourceNotFound(message="Resource not found",
-                               payload={'resource_id': resource_id})
+        raise ResourceNotFound(message="Resource not found", payload={"resource_id": resource_id})
     return resource
 
 
@@ -56,8 +60,9 @@ def get_resource_from_name(resource_name):
 
     if resource is None:
         logger.warning("Resource not found. Name : {}".format(resource_name))
-        raise ResourceNotFound(message="Resource not found",
-                               payload={'resource_name': resource_name})
+        raise ResourceNotFound(
+            message="Resource not found", payload={"resource_name": resource_name}
+        )
     return resource
 
 
@@ -82,8 +87,9 @@ def get_resources_from_tags(resource_tags):
 
     if not resources:
         logger.warning("Resources not found. Tag(s) : {}".format(resource_tags))
-        raise ResourceNotFound(message="No resource found matching the tag(s)",
-                               payload={'tags': resource_tags})
+        raise ResourceNotFound(
+            message="No resource found matching the tag(s)", payload={"tags": resource_tags}
+        )
     return resources
 
 
@@ -112,11 +118,10 @@ def get_an_available_resource(rid=None, name=None, tags=None):
 
     if resource.lock_token is not None:
         logger.warning("Resource already locked. Id : {}".format(resource.id))
-        raise ResourceAlreadyLocked(message="Cannot lock the requested resource, resource(s) already locked",
-                                    payload={'id': rid,
-                                             'name': name,
-                                             'tags': tags
-                                             })
+        raise ResourceAlreadyLocked(
+            message="Cannot lock the requested resource, resource(s) already locked",
+            payload={"id": rid, "name": name, "tags": tags},
+        )
     return resource
 
 
@@ -133,14 +138,12 @@ def lock_resource(rid=None, name=None, tags=None):
     """
     # Prevent concurrent access in a multi threaded execution context
     with resource_lock:
-
         resource = get_an_available_resource(rid=rid, name=name, tags=tags)
 
         # Update resource (Pydantic models are immutable, so we create a new one)
-        updated_resource = resource.model_copy(update={
-            'lock_token': str(uuid4()),
-            'lock_details': 'Resource locked'
-        })
+        updated_resource = resource.model_copy(
+            update={"lock_token": str(uuid4()), "lock_details": "Resource locked"}
+        )
 
         # Update both indexes
         resources_by_id[updated_resource.id] = updated_resource
@@ -165,22 +168,23 @@ def unlock_resource(resource_id, lock_token):
 
     if resource.lock_token is None:
         logger.warning("Resource already unlocked. Id : {}".format(resource_id))
-        raise ResourceAlreadyUnlocked(message="Resource is already unlocked",
-                                      payload={'resource_id': resource_id})
+        raise ResourceAlreadyUnlocked(
+            message="Resource is already unlocked", payload={"resource_id": resource_id}
+        )
     if lock_token != resource.lock_token:
-        msg = "Incorrect lock token. Id : {}, lock-token : {}, resource lock-token : {}".format(resource_id,
-                                                                                                lock_token,
-                                                                                                resource.lock_token)
+        msg = "Incorrect lock token. Id : {}, lock-token : {}, resource lock-token : {}".format(
+            resource_id, lock_token, resource.lock_token
+        )
         logger.warning(msg)
-        raise InvalidLockToken(message="Cannot unlock resource, the lock token is not valid.",
-                               payload={'resource': resource.dict,
-                                        'invalid-lock-token': lock_token})
+        raise InvalidLockToken(
+            message="Cannot unlock resource, the lock token is not valid.",
+            payload={"resource": resource.dict, "invalid-lock-token": lock_token},
+        )
 
     # Update resource
-    updated_resource = resource.model_copy(update={
-        'lock_token': None,
-        'lock_details': 'Resource available'
-    })
+    updated_resource = resource.model_copy(
+        update={"lock_token": None, "lock_details": "Resource available"}
+    )
 
     # Update both indexes
     resources_by_id[updated_resource.id] = updated_resource
@@ -190,7 +194,7 @@ def unlock_resource(resource_id, lock_token):
 
 
 def populate_database_from_file(resource_descriptor):
-    """ Populate the in-memory storage using the resources described in a yaml file.
+    """Populate the in-memory storage using the resources described in a yaml file.
 
     Args:
       resource_descriptor (str): the resource descriptor.
@@ -219,9 +223,9 @@ def populate_database_from_file(resource_descriptor):
     for resource_name in list(resources):
         logger.debug("Add resource : {}".format(resource_name))
 
-        description = resources[resource_name].get('description')
-        endpoint = resources[resource_name].get('endpoint')
-        tags = resources[resource_name].get('tags')
+        description = resources[resource_name].get("description")
+        endpoint = resources[resource_name].get("endpoint")
+        tags = resources[resource_name].get("tags")
 
         # Create resource
         resource = Resource(
@@ -229,7 +233,7 @@ def populate_database_from_file(resource_descriptor):
             name=resource_name,
             description=description,
             endpoint=endpoint,
-            tags=tags
+            tags=tags,
         )
 
         # Add to both indexes

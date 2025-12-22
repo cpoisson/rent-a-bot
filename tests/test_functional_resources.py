@@ -19,6 +19,7 @@ class TestUserStory(object):
         some test...
 
 """
+
 import pytest
 import rentabot
 from rentabot.models import Resource
@@ -57,7 +58,7 @@ class TestGetResources(object):
         create_resources(res_count_expected)
 
         # Request the available resources
-        response = app.get('/rentabot/api/v1.0/resources')
+        response = app.get("/rentabot/api/v1.0/resources")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -65,12 +66,13 @@ class TestGetResources(object):
             pytest.fail(msg)
 
         # Should contains the count of resources expected
-        resources = response.json()['resources']
+        resources = response.json()["resources"]
 
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
-            msg = "Oopsie, {} resources were expected, received {}.".format(res_count_expected,
-                                                                            res_count_returned)
+            msg = "Oopsie, {} resources were expected, received {}.".format(
+                res_count_expected, res_count_returned
+            )
             pytest.fail(msg)
 
     def test_get_resources_no_criteria_no_resource(self, app):
@@ -86,7 +88,7 @@ class TestGetResources(object):
         reset_database()
 
         # Request the available resources
-        response = app.get('/rentabot/api/v1.0/resources')
+        response = app.get("/rentabot/api/v1.0/resources")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -95,12 +97,13 @@ class TestGetResources(object):
 
         res_count_expected = 0
         # Should contains 0 resources
-        resources = response.json()['resources']
+        resources = response.json()["resources"]
 
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
-            msg = "Oopsie, {} resources were expected, received {}.".format(res_count_expected,
-                                                                            res_count_returned)
+            msg = "Oopsie, {} resources were expected, received {}.".format(
+                res_count_expected, res_count_returned
+            )
             pytest.fail(msg)
 
     def test_get_a_resource(self, app):
@@ -120,7 +123,7 @@ class TestGetResources(object):
         create_resources(10)
 
         # Request an existing resource
-        response = app.get('/rentabot/api/v1.0/resources/5')
+        response = app.get("/rentabot/api/v1.0/resources/5")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -128,7 +131,7 @@ class TestGetResources(object):
             pytest.fail(msg)
 
         # Should contains 0 resources
-        resource = response.json()['resource']
+        resource = response.json()["resource"]
 
     def test_get_a_resource_does_not_exist(self, app):
         """
@@ -147,7 +150,7 @@ class TestGetResources(object):
         create_resources(10)
 
         # Request a obviously unkown resource
-        response = app.get('/rentabot/api/v1.0/resources/1000')
+        response = app.get("/rentabot/api/v1.0/resources/1000")
 
         # Should be a 404 Not Found
         if response.status_code != 404:
@@ -155,7 +158,7 @@ class TestGetResources(object):
             pytest.fail(msg)
         # Check that the 404 returned is the app 404 and not a generic one.
         response_json = response.json()
-        assert response_json['resource_id'] == 1000
+        assert response_json["resource_id"] == 1000
 
 
 class TestLockUnlockResourceById(object):
@@ -182,17 +185,14 @@ class TestLockUnlockResourceById(object):
         # Add a resource to memory
         from rentabot.models import resources_by_id, resources_by_name
         import rentabot.models
-        resource = Resource(
-            id=1,
-            name="resource",
-            description="I'm a resource!"
-        )
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
         resources_by_name["resource"] = resource
         rentabot.models.next_resource_id = 2
 
         # Lock the first resource
-        response = app.post('/rentabot/api/v1.0/resources/1/lock')
+        response = app.post("/rentabot/api/v1.0/resources/1/lock")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -202,7 +202,7 @@ class TestLockUnlockResourceById(object):
         # Response should contain a lock token
         response_dict = response.json()
         try:
-            lock_token = response_dict['lock-token']
+            lock_token = response_dict["lock-token"]
         except KeyError:
             msg = "Oopsie, cannot find the lock-token."
             pytest.fail(msg)
@@ -212,11 +212,11 @@ class TestLockUnlockResourceById(object):
                 pytest.fail(msg)
 
         # Resource should be locked with this token
-        response = app.get('/rentabot/api/v1.0/resources/1')
+        response = app.get("/rentabot/api/v1.0/resources/1")
 
-        resource = response.json()['resource']
+        resource = response.json()["resource"]
 
-        if resource['lock-token'] != lock_token:
+        if resource["lock-token"] != lock_token:
             msg = "Oopsie, the resource is not locked with the expected lock token."
             pytest.fail(msg)
 
@@ -236,7 +236,9 @@ class TestLockUnlockResourceById(object):
         lock_token = self.test_lock_resource(app)
 
         # Unlock the first resource
-        response = app.post('/rentabot/api/v1.0/resources/1/unlock?lock-token={}'.format(lock_token))
+        response = app.post(
+            "/rentabot/api/v1.0/resources/1/unlock?lock-token={}".format(lock_token)
+        )
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -244,11 +246,11 @@ class TestLockUnlockResourceById(object):
             pytest.fail(msg)
 
         # Resource should be unlocked
-        response = app.get('/rentabot/api/v1.0/resources/1')
+        response = app.get("/rentabot/api/v1.0/resources/1")
 
-        resource = response.json()['resource']
+        resource = response.json()["resource"]
 
-        if resource['lock-token'] is not None:
+        if resource["lock-token"] is not None:
             msg = "Oopsie, the resource seems to be locked."
             pytest.fail(msg)
 
@@ -266,10 +268,12 @@ class TestLockUnlockResourceById(object):
         self.test_lock_resource(app)
 
         # Create a bad lock token
-        lock_token = 'verybadlocktokenbadbadbad'
+        lock_token = "verybadlocktokenbadbadbad"
 
         # Unlock the first resource
-        response = app.post('/rentabot/api/v1.0/resources/1/unlock?lock-token={}'.format(lock_token))
+        response = app.post(
+            "/rentabot/api/v1.0/resources/1/unlock?lock-token={}".format(lock_token)
+        )
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -277,11 +281,11 @@ class TestLockUnlockResourceById(object):
             pytest.fail(msg)
 
         # Resource should be still locked
-        response = app.get('/rentabot/api/v1.0/resources/1')
+        response = app.get("/rentabot/api/v1.0/resources/1")
 
-        resource = response.json()['resource']
+        resource = response.json()["resource"]
 
-        if resource['lock-token'] is None:
+        if resource["lock-token"] is None:
             msg = "Oopsie, the resource seems to be unlocked."
             pytest.fail(msg)
 
@@ -298,7 +302,7 @@ class TestLockUnlockResourceById(object):
         self.test_lock_resource(app)
 
         # Lock the resource again
-        response = app.post('/rentabot/api/v1.0/resources/1/lock')
+        response = app.post("/rentabot/api/v1.0/resources/1/lock")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -321,24 +325,21 @@ class TestLockUnlockResourceById(object):
         # Add a resource to memory
         from rentabot.models import resources_by_id, resources_by_name
         import rentabot.models
-        resource = Resource(
-            id=1,
-            name="resource",
-            description="I'm a resource!"
-        )
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
         resources_by_name["resource"] = resource
         rentabot.models.next_resource_id = 2
 
         # Unlock the first resource
-        response = app.post('/rentabot/api/v1.0/resources/1/unlock')
+        response = app.post("/rentabot/api/v1.0/resources/1/unlock")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
             msg = "Oopsie, status code 403 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
 
-    @pytest.mark.parametrize('cmd', ['lock', 'unlock'])
+    @pytest.mark.parametrize("cmd", ["lock", "unlock"])
     def test_unlock_unlock_resource_does_not_exist(self, app, cmd):
         """
         Title: Unlock or Lock a resource that does not exist.
@@ -354,18 +355,15 @@ class TestLockUnlockResourceById(object):
         # Add a resource to memory
         from rentabot.models import resources_by_id, resources_by_name
         import rentabot.models
-        resource = Resource(
-            id=1,
-            name="resource",
-            description="I'm a resource!"
-        )
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
         resources_by_name["resource"] = resource
         rentabot.models.next_resource_id = 2
 
         # Unlock an arbitrary resource 1000000, far away
         resource_id = 100000
-        response = app.post('/rentabot/api/v1.0/resources/{}/{}'.format(resource_id, cmd))
+        response = app.post("/rentabot/api/v1.0/resources/{}/{}".format(resource_id, cmd))
 
         # Response should be a 404 Not Found
         if response.status_code != 404:
@@ -374,7 +372,7 @@ class TestLockUnlockResourceById(object):
 
         # Check that the 404 returned is the app 404 and not a generic one.
         response_json = response.json()
-        assert response_json['resource_id'] == resource_id
+        assert response_json["resource_id"] == resource_id
 
 
 class TestLockResourceByCriteria(object):
@@ -404,7 +402,7 @@ class TestLockResourceByCriteria(object):
         # Lock an arduino with leds
         tag_1 = "arduino"
         tag_2 = "leds"
-        response = app.post('/rentabot/api/v1.0/resources/lock?tag={}&tag={}'.format(tag_1, tag_2))
+        response = app.post("/rentabot/api/v1.0/resources/lock?tag={}&tag={}".format(tag_1, tag_2))
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -415,7 +413,7 @@ class TestLockResourceByCriteria(object):
 
         # Response should contain a lock token
         try:
-            lock_token = response_dict['lock-token']
+            lock_token = response_dict["lock-token"]
         except KeyError:
             msg = "Oopsie, cannot find the lock-token."
             pytest.fail(msg)
@@ -425,7 +423,7 @@ class TestLockResourceByCriteria(object):
                 pytest.fail(msg)
 
         # Resource tags should match with arduino and leds tags
-        resource_tags = response_dict['resource']['tags'].split()
+        resource_tags = response_dict["resource"]["tags"].split()
 
         if tag_1 not in resource_tags:
             pytest.fail("{} not in resource tags {}".format(tag_1, resource_tags))
@@ -434,7 +432,7 @@ class TestLockResourceByCriteria(object):
 
         # Retry to lock the same tags (only one is available here)
 
-        response = app.post('/rentabot/api/v1.0/resources/lock?tag={}&tag={}'.format(tag_1, tag_2))
+        response = app.post("/rentabot/api/v1.0/resources/lock?tag={}&tag={}".format(tag_1, tag_2))
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -458,7 +456,7 @@ class TestLockResourceByCriteria(object):
         # Lock an arduino with leds
         tag_1 = "arduino"
         tag_2 = "acapulco"
-        response = app.post('/rentabot/api/v1.0/resources/lock?tag={}&tag={}'.format(tag_1, tag_2))
+        response = app.post("/rentabot/api/v1.0/resources/lock?tag={}&tag={}".format(tag_1, tag_2))
 
         # Should be a 404
         if response.status_code != 404:
@@ -482,7 +480,7 @@ class TestLockResourceByCriteria(object):
 
         # Lock an arduino with leds
         resource_name = "arduino-1"
-        response = app.post('/rentabot/api/v1.0/resources/lock?name={}'.format(resource_name))
+        response = app.post("/rentabot/api/v1.0/resources/lock?name={}".format(resource_name))
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -493,7 +491,7 @@ class TestLockResourceByCriteria(object):
 
         # Response should contain a lock token
         try:
-            lock_token = response_dict['lock-token']
+            lock_token = response_dict["lock-token"]
         except KeyError:
             msg = "Oopsie, cannot find the lock-token."
             pytest.fail(msg)
@@ -503,14 +501,16 @@ class TestLockResourceByCriteria(object):
                 pytest.fail(msg)
 
         # Resource name should match with the name provided
-        returned_name = response_dict['resource']['name']
+        returned_name = response_dict["resource"]["name"]
 
         if returned_name != resource_name:
-            pytest.fail("{} is not the awaited resource name {}.".format(returned_name, resource_name))
+            pytest.fail(
+                "{} is not the awaited resource name {}.".format(returned_name, resource_name)
+            )
 
         # Retry to lock the same name (only one is available here)
 
-        response = app.post('/rentabot/api/v1.0/resources/lock?name={}'.format(resource_name))
+        response = app.post("/rentabot/api/v1.0/resources/lock?name={}".format(resource_name))
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -532,7 +532,7 @@ class TestLockResourceByCriteria(object):
         create_resources_with_tags()
 
         # Lock using a bad name
-        response = app.post('/rentabot/api/v1.0/resources/lock?name=i-do-not-exist')
+        response = app.post("/rentabot/api/v1.0/resources/lock?name=i-do-not-exist")
 
         # Should be a 404
         if response.status_code != 404:
@@ -554,7 +554,7 @@ class TestLockResourceByCriteria(object):
         create_resources_with_tags()
 
         # Lock using a not supported criteria
-        response = app.post('/rentabot/api/v1.0/resources/lock?color=blue')
+        response = app.post("/rentabot/api/v1.0/resources/lock?color=blue")
 
         # Should be a 400
         if response.status_code != 400:
