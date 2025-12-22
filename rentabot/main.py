@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Rent-A-Bot",
     description="Your automation resource provider",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan
 )
 
