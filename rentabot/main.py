@@ -28,6 +28,7 @@ from rentabot.exceptions import (
     ResourceException,
     ResourceNotFound,
 )
+from rentabot import __version__
 from rentabot.logger import get_logger
 
 logger = get_logger(__name__)
@@ -54,7 +55,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Rent-A-Bot",
     description="Your automation resource provider",
-    version="0.2.0",
+    version=__version__,
     lifespan=lifespan,
 )
 
