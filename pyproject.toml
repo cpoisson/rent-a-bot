@@ -91,6 +91,7 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
+    "B008",  # function call in argument defaults (required for FastAPI Query/Depends)
 ]
 
 [tool.ruff.format]

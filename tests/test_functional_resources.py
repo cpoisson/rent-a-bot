@@ -122,7 +122,7 @@ class TestGetResources:
             pytest.fail(msg)
 
         # Should contains 0 resources
-        resource = response.json()["resource"]
+        response.json()["resource"]
 
     def test_get_a_resource_does_not_exist(self, app):
         """

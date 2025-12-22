@@ -79,7 +79,7 @@ def get_resources_from_tags(resource_tags):
         A Resource object.
     """
     all_resources = get_all_ressources()
-    resources = list()
+    resources = []
 
     # Filter the ones matching the tags
     for resource in all_resources:
