@@ -23,22 +23,12 @@ import rentabot.views
 
 
 def init_app():
-    """Initialize the application database."""
-    # Delete the database if the file exists
-    if os.path.exists(rentabot.models.db_path):
-        logger.info("Delete existing database : %s" % rentabot.models.db_path)
-        os.remove(rentabot.models.db_path)
-
-    # Create the database
-    logger.info("Create database : %s" % rentabot.models.db_path)
-    rentabot.models.db.create_all()
-    rentabot.models.db.session.commit()
-
-    # Init the database from a file descriptor is the env variable is set
+    """Initialize the application resources."""
+    # Init the resources from a file descriptor if the env variable is set
     try:
         rentabot.controllers.populate_database_from_file(os.environ['RENTABOT_RESOURCE_DESCRIPTOR'])
     except KeyError:
-        pass
+        logger.info("No RENTABOT_RESOURCE_DESCRIPTOR environment variable set, starting with empty resources")
 
 
 # Only initialize if running as main app (not during testing)

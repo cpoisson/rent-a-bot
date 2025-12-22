@@ -3,11 +3,11 @@
 rentabot.controllers
 ~~~~~~~~~~~~~~~~~~~~
 
-This module contains rent-a-bot functions related to database manipulation.
+This module contains rent-a-bot functions related to in-memory resource manipulation.
 """
 
 
-from rentabot.models import Resource, db
+from rentabot.models import Resource, resources_by_id, resources_by_name, resource_lock, next_resource_id
 from rentabot.exceptions import ResourceException, ResourceNotFound
 from rentabot.exceptions import ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
 from rentabot.exceptions import ResourceDescriptorIsEmpty
@@ -16,27 +16,25 @@ from rentabot.logger import get_logger
 from uuid import uuid4
 import yaml
 
-import threading
-thread_safe_lock = threading.Lock()
 
 logger = get_logger(__name__)
 
 
 def get_all_ressources():
     """Returns a list of resources."""
-    return Resource.query.all()
+    return list(resources_by_id.values())
 
 
 def get_resource_from_id(resource_id):
     """Returns a Resource object given it's id.
 
     Args:
-        resource_id: the index of the resource in the database.
+        resource_id: the index of the resource.
 
     Returns:
         A Resource object.
     """
-    resource = Resource.query.filter_by(id=resource_id).first()
+    resource = resources_by_id.get(resource_id)
 
     if resource is None:
         logger.warning("Resource not found. Id : {}".format(resource_id))
@@ -54,7 +52,7 @@ def get_resource_from_name(resource_name):
     Returns:
         A Resource object.
     """
-    resource = Resource.query.filter_by(name=resource_name).first()
+    resource = resources_by_name.get(resource_name)
 
     if resource is None:
         logger.warning("Resource not found. Name : {}".format(resource_name))
@@ -75,7 +73,7 @@ def get_resources_from_tags(resource_tags):
     all_resources = get_all_ressources()
     resources = list()
 
-    # Filter the ones matching the tags, TODO: Use database more efficiently
+    # Filter the ones matching the tags
     for resource in all_resources:
         if not resource.tags:
             continue
@@ -133,18 +131,24 @@ def lock_resource(rid=None, name=None, tags=None):
     Returns:
         The lock token value
     """
-    # Prevent concurrent database access in a multi threaded execution context
-    with thread_safe_lock:
+    # Prevent concurrent access in a multi threaded execution context
+    with resource_lock:
 
         resource = get_an_available_resource(rid=rid, name=name, tags=tags)
 
-        resource.lock_token = str(uuid4())
-        resource.lock_details = u'Resource locked'
-        db.session.commit()
+        # Update resource (Pydantic models are immutable, so we create a new one)
+        updated_resource = resource.model_copy(update={
+            'lock_token': str(uuid4()),
+            'lock_details': 'Resource locked'
+        })
 
-        logger.info("Resource locked. Id : {}".format(resource.id))
+        # Update both indexes
+        resources_by_id[updated_resource.id] = updated_resource
+        resources_by_name[updated_resource.name] = updated_resource
 
-        return resource.lock_token, resource
+        logger.info("Resource locked. Id : {}".format(updated_resource.id))
+
+        return updated_resource.lock_token, updated_resource
 
 
 def unlock_resource(resource_id, lock_token):
@@ -171,15 +175,22 @@ def unlock_resource(resource_id, lock_token):
         raise InvalidLockToken(message="Cannot unlock resource, the lock token is not valid.",
                                payload={'resource': resource.dict,
                                         'invalid-lock-token': lock_token})
-    resource.lock_token = None
-    resource.lock_details = u'Resource available'
-    db.session.commit()
+
+    # Update resource
+    updated_resource = resource.model_copy(update={
+        'lock_token': None,
+        'lock_details': 'Resource available'
+    })
+
+    # Update both indexes
+    resources_by_id[updated_resource.id] = updated_resource
+    resources_by_name[updated_resource.name] = updated_resource
 
     logger.info("Resource unlocked. Id : {}".format(resource_id))
 
 
 def populate_database_from_file(resource_descriptor):
-    """ Populate the database using the resources described in a yaml file.
+    """ Populate the in-memory storage using the resources described in a yaml file.
 
     Args:
       resource_descriptor (str): the resource descriptor.
@@ -188,7 +199,7 @@ def populate_database_from_file(resource_descriptor):
         (list) resources name added
 
     """
-    logger.info("Populating the database. Descriptor : {}".format(resource_descriptor))
+    logger.info("Populating resources from descriptor : {}".format(resource_descriptor))
 
     with open(resource_descriptor, "r") as f:
         resources = yaml.load(f, Loader=yaml.SafeLoader)
@@ -196,35 +207,34 @@ def populate_database_from_file(resource_descriptor):
     if resources is None:
         raise ResourceDescriptorIsEmpty(resource_descriptor)
 
-    from rentabot import app
+    # Import here to avoid circular dependency
+    from rentabot.models import resources_by_id, resources_by_name
+    import rentabot.models
 
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
+    # Clear existing resources
+    resources_by_id.clear()
+    resources_by_name.clear()
+    rentabot.models.next_resource_id = 1
 
-        for resource_name in list(resources):
+    for resource_name in list(resources):
+        logger.debug("Add resource : {}".format(resource_name))
 
-            logger.debug("Add resource : {}".format(resource_name))
+        description = resources[resource_name].get('description')
+        endpoint = resources[resource_name].get('endpoint')
+        tags = resources[resource_name].get('tags')
 
-            try:
-                description = resources[resource_name]['description']
-            except KeyError:
-                description = None
+        # Create resource
+        resource = Resource(
+            id=rentabot.models.next_resource_id,
+            name=resource_name,
+            description=description,
+            endpoint=endpoint,
+            tags=tags
+        )
 
-            try:
-                endpoint = resources[resource_name]['endpoint']
-            except KeyError:
-                endpoint = None
-
-            try:
-                tags = resources[resource_name]['tags']
-            except KeyError:
-                tags = None
-
-            db.session.add(Resource(resource_name,
-                                    description=description,
-                                    endpoint=endpoint,
-                                    tags=tags))
-        db.session.commit()
+        # Add to both indexes
+        resources_by_id[resource.id] = resource
+        resources_by_name[resource.name] = resource
+        rentabot.models.next_resource_id += 1
 
     return list(resources)

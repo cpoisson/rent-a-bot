@@ -1,40 +1,42 @@
 # -*- coding: utf-8 -*-
 """
-Database test utilities
-~~~~~~~~~~~~~~~~~~~~~~~
+In-memory storage test utilities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This module contains Rent-A-Bot tests database utilities.
+This module contains Rent-A-Bot tests storage utilities.
 
 """
-from rentabot.models import Resource, db
-from rentabot import app
+from rentabot.models import Resource, resources_by_id, resources_by_name
+import rentabot.models
 
 
 def reset_database():
-    """Drop and create tables."""
-    # Reset database within app context
-    with app.app_context():
-        db.drop_all()
-        # Create tables
-        db.create_all()
+    """Clear all resources."""
+    resources_by_id.clear()
+    resources_by_name.clear()
+    rentabot.models.next_resource_id = 1
 
 
 def create_resources(qty):
-    """ Create resources in the database.
+    """ Create resources in memory.
 
     Args:
         qty: quantity of resources to create
 
     """
-    with app.app_context():
-        for x in range(qty):
-            db.session.add(Resource(name="resource-{}".format(x),
-                                    description="I'm the resource {}!".format(x)))
-        db.session.commit()
+    for x in range(qty):
+        resource = Resource(
+            id=rentabot.models.next_resource_id,
+            name="resource-{}".format(x),
+            description="I'm the resource {}!".format(x)
+        )
+        resources_by_id[resource.id] = resource
+        resources_by_name[resource.name] = resource
+        rentabot.models.next_resource_id += 1
 
 
 def create_resources_with_tags():
-    """ Create resources with tags in the database
+    """ Create resources with tags in memory
 
     """
     resources = {
@@ -43,8 +45,12 @@ def create_resources_with_tags():
         "raspberry-pi-1": "raspberry multipurpose",
         "raspberry-pi-2": "raspberry multipurpose"
     }
-    with app.app_context():
-        for resource_name in list(resources):
-            db.session.add(Resource(name=resource_name,
-                                    tags=resources[resource_name]))
-        db.session.commit()
+    for resource_name in list(resources):
+        resource = Resource(
+            id=rentabot.models.next_resource_id,
+            name=resource_name,
+            tags=resources[resource_name]
+        )
+        resources_by_id[resource.id] = resource
+        resources_by_name[resource.name] = resource
+        rentabot.models.next_resource_id += 1

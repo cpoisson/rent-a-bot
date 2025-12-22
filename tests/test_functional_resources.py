@@ -21,7 +21,7 @@ class TestUserStory(object):
 """
 import pytest
 import rentabot
-from rentabot.models import Resource, db
+from rentabot.models import Resource
 
 import os
 import json
@@ -179,12 +179,17 @@ class TestLockUnlockResourceById(object):
         # Reset Database
         reset_database()
 
-        # Add a resource to the database
-        from rentabot import app as flask_app
-        with flask_app.app_context():
-            db.session.add(Resource(name="resource",
-                                    description="I'm a resource!"))
-            db.session.commit()
+        # Add a resource to memory
+        from rentabot.models import resources_by_id, resources_by_name
+        import rentabot.models
+        resource = Resource(
+            id=1,
+            name="resource",
+            description="I'm a resource!"
+        )
+        resources_by_id[1] = resource
+        resources_by_name["resource"] = resource
+        rentabot.models.next_resource_id = 2
 
         # Lock the first resource
         response = app.post('/rentabot/api/v1.0/resources/1/lock')
@@ -313,12 +318,17 @@ class TestLockUnlockResourceById(object):
         # Reset Database
         reset_database()
 
-        # Add a resource to the database
-        from rentabot import app as flask_app
-        with flask_app.app_context():
-            db.session.add(Resource(name="resource",
-                                    description="I'm a resource!"))
-            db.session.commit()
+        # Add a resource to memory
+        from rentabot.models import resources_by_id, resources_by_name
+        import rentabot.models
+        resource = Resource(
+            id=1,
+            name="resource",
+            description="I'm a resource!"
+        )
+        resources_by_id[1] = resource
+        resources_by_name["resource"] = resource
+        rentabot.models.next_resource_id = 2
 
         # Unlock the first resource
         response = app.post('/rentabot/api/v1.0/resources/1/unlock')
@@ -341,12 +351,17 @@ class TestLockUnlockResourceById(object):
         # Reset Database
         reset_database()
 
-        # Add a resource to the database
-        from rentabot import app as flask_app
-        with flask_app.app_context():
-            db.session.add(Resource(name="resource",
-                                    description="I'm a resource!"))
-            db.session.commit()
+        # Add a resource to memory
+        from rentabot.models import resources_by_id, resources_by_name
+        import rentabot.models
+        resource = Resource(
+            id=1,
+            name="resource",
+            description="I'm a resource!"
+        )
+        resources_by_id[1] = resource
+        resources_by_name["resource"] = resource
+        rentabot.models.next_resource_id = 2
 
         # Unlock an arbitrary resource 1000000, far away
         resource_id = 100000
