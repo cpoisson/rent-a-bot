@@ -43,6 +43,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "httpx",
+    "ruff",
 ]
 test = [
     "pytest",
@@ -73,3 +74,25 @@ testpaths = ["tests"]
 [tool.coverage.run]
 include = ["rentabot/*.py"]
 omit = [".eggs/*", "tests/*"]
+
+[tool.ruff]
+target-version = "py37"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
