@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict
 
+from rentabot import __version__
 from rentabot.controllers import (
     get_all_ressources,
     get_resource_from_id,
@@ -28,7 +29,6 @@ from rentabot.exceptions import (
     ResourceException,
     ResourceNotFound,
 )
-from rentabot import __version__
 from rentabot.logger import get_logger
 
 logger = get_logger(__name__)
