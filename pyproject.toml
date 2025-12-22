@@ -13,7 +13,7 @@ authors = [
 ]
 keywords = ["Resource allocation application for automation"]
 classifiers = [
-    "Framework :: Flask",
+    "Framework :: FastAPI",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
@@ -30,7 +30,9 @@ classifiers = [
 ]
 requires-python = ">=3.7"
 dependencies = [
-    "flask",
+    "fastapi",
+    "uvicorn[standard]",
+    "jinja2",
     "pyyaml",
     "daiquiri",
     "pydantic>=2.0",

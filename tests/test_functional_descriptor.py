@@ -66,7 +66,7 @@ class TestInitResourcesFromDescriptor(object):
             pytest.fail(msg)
 
         # Should contains the count of resources expected
-        resources = json.loads(response.get_data().decode('utf-8'))['resources']
+        resources = response.json()['resources']
 
         res_count_expected = len(list(input_resources))
         res_count_returned = len(list(resources))

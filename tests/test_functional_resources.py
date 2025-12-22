@@ -65,7 +65,7 @@ class TestGetResources(object):
             pytest.fail(msg)
 
         # Should contains the count of resources expected
-        resources = json.loads(response.get_data().decode('utf-8'))['resources']
+        resources = response.json()['resources']
 
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
@@ -95,7 +95,7 @@ class TestGetResources(object):
 
         res_count_expected = 0
         # Should contains 0 resources
-        resources = json.loads(response.get_data().decode('utf-8'))['resources']
+        resources = response.json()['resources']
 
         res_count_returned = len(list(resources))
         if res_count_returned != res_count_expected:
@@ -128,7 +128,7 @@ class TestGetResources(object):
             pytest.fail(msg)
 
         # Should contains 0 resources
-        resource = json.loads(response.get_data().decode('utf-8'))['resource']
+        resource = response.json()['resource']
 
     def test_get_a_resource_does_not_exist(self, app):
         """
@@ -154,7 +154,7 @@ class TestGetResources(object):
             msg = "Oopsie, status code 404 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
         # Check that the 404 returned is the app 404 and not a generic one.
-        response_json = json.loads(response.get_data().decode('utf-8'))
+        response_json = response.json()
         assert response_json['resource_id'] == 1000
 
 
@@ -200,7 +200,7 @@ class TestLockUnlockResourceById(object):
             pytest.fail(msg)
 
         # Response should contain a lock token
-        response_dict = json.loads(response.get_data().decode('utf-8'))
+        response_dict = response.json()
         try:
             lock_token = response_dict['lock-token']
         except KeyError:
@@ -214,7 +214,7 @@ class TestLockUnlockResourceById(object):
         # Resource should be locked with this token
         response = app.get('/rentabot/api/v1.0/resources/1')
 
-        resource = json.loads(response.get_data().decode('utf-8'))['resource']
+        resource = response.json()['resource']
 
         if resource['lock-token'] != lock_token:
             msg = "Oopsie, the resource is not locked with the expected lock token."
@@ -246,7 +246,7 @@ class TestLockUnlockResourceById(object):
         # Resource should be unlocked
         response = app.get('/rentabot/api/v1.0/resources/1')
 
-        resource = json.loads(response.get_data().decode('utf-8'))['resource']
+        resource = response.json()['resource']
 
         if resource['lock-token'] is not None:
             msg = "Oopsie, the resource seems to be locked."
@@ -279,7 +279,7 @@ class TestLockUnlockResourceById(object):
         # Resource should be still locked
         response = app.get('/rentabot/api/v1.0/resources/1')
 
-        resource = json.loads(response.get_data().decode('utf-8'))['resource']
+        resource = response.json()['resource']
 
         if resource['lock-token'] is None:
             msg = "Oopsie, the resource seems to be unlocked."
@@ -373,7 +373,7 @@ class TestLockUnlockResourceById(object):
             pytest.fail(msg)
 
         # Check that the 404 returned is the app 404 and not a generic one.
-        response_json = json.loads(response.get_data().decode('utf-8'))
+        response_json = response.json()
         assert response_json['resource_id'] == resource_id
 
 
@@ -411,7 +411,7 @@ class TestLockResourceByCriteria(object):
             msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
 
-        response_dict = json.loads(response.get_data().decode('utf-8'))
+        response_dict = response.json()
 
         # Response should contain a lock token
         try:
@@ -489,7 +489,7 @@ class TestLockResourceByCriteria(object):
             msg = "Oopsie, status code 200 was awaited, received {}.".format(response.status_code)
             pytest.fail(msg)
 
-        response_dict = json.loads(response.get_data().decode('utf-8'))
+        response_dict = response.json()
 
         # Response should contain a lock token
         try:
