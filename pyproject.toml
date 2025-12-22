@@ -42,10 +42,12 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
+    "httpx",
 ]
 test = [
     "pytest",
     "pytest-cov",
+    "httpx",
 ]
 
 [project.urls]
