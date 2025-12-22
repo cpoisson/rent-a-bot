@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rent-a-bot"
-version = "0.1.0"
+version = "0.2.0"
 description = "Rent-A-Bot, your automation resource provider."
 readme = "README.md"
 license = { text = "MIT" }
@@ -59,20 +59,15 @@ packages = ["rentabot"]
 include = [
     "/rentabot",
     "/tests",
-    "/MANIFEST.in",
     "/README.md",
     "/LICENSE",
     "/CHANGELOG.md",
 ]
 
 [tool.pytest.ini_options]
-addopts = "-vv --showlocals --cov=. --cov-report term-missing"
+addopts = "-vv --showlocals --cov=rentabot --cov-report term-missing"
 testpaths = ["tests"]
 
 [tool.coverage.run]
 include = ["rentabot/*.py"]
-omit = [
-    ".eggs/*",
-    "tests/*",
-    "setup.py",
-]
+omit = [".eggs/*", "tests/*"]
