@@ -11,9 +11,8 @@ Setup
 `````
 .. code:: bash
     $ pip install rent-a-bot
-    $ export FLASK_APP=rentabot
     $ export RENTABOT_RESOURCE_DESCRIPTOR=path/to/your/descriptor
-    $ flask run
+    $ uvicorn rentabot.main:app --reload --port 8000
 
 Links
 `````
@@ -33,7 +32,7 @@ setup(
 
     name='rent-a-bot',
 
-    version='0.1.0',
+    version='0.2.0',
 
     description='Rent-A-Bot, your automation resource provider.',
     long_description=__doc__,
@@ -47,16 +46,19 @@ setup(
 
     # Classifiers => https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Framework :: Flask',
+        'Framework :: FastAPI',
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Topic :: Utilities',
         'Operating System :: POSIX :: Linux',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6'
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ],
 
     keywords='Resource allocation application for automation',
@@ -64,18 +66,20 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     # Run time Requirements
-    install_requires=['flask',
-                      'flask-sqlalchemy',
+    install_requires=['fastapi',
+                      'uvicorn[standard]',
+                      'jinja2',
                       'pyyaml',
-                      'daiquiri'],
+                      'daiquiri',
+                      'pydantic>=2.0'],
 
     setup_requires=['pytest-runner'],
 
-    tests_require=['pytest', 'pytest-cov'],
+    tests_require=['pytest', 'pytest-cov', 'httpx'],
 
     extras_require={
-        'dev': ['pytest', 'pytest-cov'],
-        'test': ['pytest', 'pytest-cov'],
+        'dev': ['pytest', 'pytest-cov', 'httpx'],
+        'test': ['pytest', 'pytest-cov', 'httpx'],
     },
 
     # Include files listed in the MANIFEST.in file of the repository
