@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests Configuration
 ~~~~~~~~~~~~~~~~~~~
@@ -6,8 +5,10 @@ Tests Configuration
 This module contains pytest configuration and shared fixtures.
 
 """
+
 import pytest
 from fastapi.testclient import TestClient
+
 import rentabot.models
 
 

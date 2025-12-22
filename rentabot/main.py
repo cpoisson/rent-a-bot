@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 rentabot.main
 ~~~~~~~~~~~~~
@@ -7,51 +6,57 @@ This module contains rent-a-bot FastAPI application.
 """
 
 import os
-from typing import List, Optional
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, HTMLResponse
+from typing import List, Optional
+
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict
 
+from rentabot import __version__
 from rentabot.controllers import (
     get_all_ressources,
     get_resource_from_id,
     lock_resource,
+    populate_database_from_file,
     unlock_resource,
-    populate_database_from_file
 )
 from rentabot.exceptions import (
-    ResourceException,
-    ResourceNotFound,
+    InvalidLockToken,
     ResourceAlreadyLocked,
     ResourceAlreadyUnlocked,
-    InvalidLockToken
+    ResourceException,
+    ResourceNotFound,
 )
 from rentabot.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 # Lifespan context manager for startup/shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     try:
-        descriptor = os.environ['RENTABOT_RESOURCE_DESCRIPTOR']
+        descriptor = os.environ["RENTABOT_RESOURCE_DESCRIPTOR"]
         populate_database_from_file(descriptor)
         logger.info(f"Loaded resources from {descriptor}")
     except KeyError:
-        logger.info("No RENTABOT_RESOURCE_DESCRIPTOR environment variable set, starting with empty resources")
+        logger.info(
+            "No RENTABOT_RESOURCE_DESCRIPTOR environment variable set, starting with empty resources"
+        )
 
     yield
     # Shutdown (if needed)
+
 
 # Create FastAPI app
 app = FastAPI(
     title="Rent-A-Bot",
     description="Your automation resource provider",
-    version="0.2.0",
-    lifespan=lifespan
+    version=__version__,
+    lifespan=lifespan,
 )
 
 # Setup templates
@@ -77,7 +82,7 @@ class ResourceResponse(BaseModel):
                 "lock_token": None,
                 "lock_details": "Resource is available",
                 "endpoint": "tcp://192.168.1.50",
-                "tags": "coffee kitchen food"
+                "tags": "coffee kitchen food",
             }
         }
     )
@@ -101,20 +106,20 @@ class UnlockResponse(BaseModel):
 
 # - [ Web View ] --------------------------------------------------------------
 
+
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Display all resources in HTML format."""
     resources = get_all_ressources()
     return templates.TemplateResponse(
-        request=request,
-        name="display_resources.html",
-        context={"resources": resources}
+        request=request, name="display_resources.html", context={"resources": resources}
     )
 
 
 # - [ API ] ------------------------------------------------------------------
 
 # - [ GET : Access to resources information ]
+
 
 @app.get("/rentabot/api/v1.0/resources", response_model=ResourcesListResponse)
 async def get_resources():
@@ -132,19 +137,18 @@ async def get_resource(resource_id: int):
 
 # - [ POST : Acquire and release resource lock ]
 
+
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/lock")
 async def lock_by_id(resource_id: int):
     """Lock a resource by ID."""
     lock_token, resource = lock_resource(rid=resource_id)
-    return {
-        "message": "Resource locked",
-        "lock-token": lock_token,
-        "resource": resource.dict
-    }
+    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/unlock")
-async def unlock_by_id(resource_id: int, lock_token: Optional[str] = Query(None, alias="lock-token")):
+async def unlock_by_id(
+    resource_id: int, lock_token: Optional[str] = Query(None, alias="lock-token")
+):
     """Unlock a resource by ID."""
     unlock_resource(resource_id, lock_token)
     return {"message": "Resource unlocked"}
@@ -154,54 +158,36 @@ async def unlock_by_id(resource_id: int, lock_token: Optional[str] = Query(None,
 async def lock_by_criterias(
     id: Optional[int] = Query(None),
     name: Optional[str] = Query(None),
-    tag: Optional[List[str]] = Query(None)
+    tag: Optional[List[str]] = Query(None),
 ):
     """Lock a resource by criteria (id, name, or tags)."""
     lock_token, resource = lock_resource(rid=id, name=name, tags=tag)
-    return {
-        "message": "Resource locked",
-        "lock-token": lock_token,
-        "resource": resource.dict
-    }
+    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
 
 
 # - [ API : Error Handlers ] ----------------------------------------
 
+
 @app.exception_handler(ResourceException)
 async def resource_exception_handler(request: Request, exc: ResourceException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.dict
-    )
+    return JSONResponse(status_code=exc.status_code, content=exc.dict)
 
 
 @app.exception_handler(ResourceNotFound)
 async def resource_not_found_handler(request: Request, exc: ResourceNotFound):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.dict
-    )
+    return JSONResponse(status_code=exc.status_code, content=exc.dict)
 
 
 @app.exception_handler(ResourceAlreadyLocked)
 async def resource_already_locked_handler(request: Request, exc: ResourceAlreadyLocked):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.dict
-    )
+    return JSONResponse(status_code=exc.status_code, content=exc.dict)
 
 
 @app.exception_handler(ResourceAlreadyUnlocked)
 async def resource_already_unlocked_handler(request: Request, exc: ResourceAlreadyUnlocked):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.dict
-    )
+    return JSONResponse(status_code=exc.status_code, content=exc.dict)
 
 
 @app.exception_handler(InvalidLockToken)
 async def invalid_lock_token_handler(request: Request, exc: InvalidLockToken):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.dict
-    )
+    return JSONResponse(status_code=exc.status_code, content=exc.dict)

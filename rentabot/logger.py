@@ -1,4 +1,3 @@
-# coding: utf-8
 """
 rentabot.logging
 
@@ -6,6 +5,7 @@ This module contains rentabot logging facility.
 """
 
 import logging
+
 import daiquiri
 import daiquiri.formatter
 
@@ -13,9 +13,7 @@ LOG_FORMAT = "%(color)s%(asctime)s - %(name)s.%(funcName)s - %(message)s%(color_
 
 daiquiri.setup(
     level=logging.INFO,
-    outputs=(
-        daiquiri.output.Stream(formatter=daiquiri.formatter.ColorFormatter(fmt=LOG_FORMAT)),
-    )
+    outputs=(daiquiri.output.Stream(formatter=daiquiri.formatter.ColorFormatter(fmt=LOG_FORMAT)),),
 )
 
 

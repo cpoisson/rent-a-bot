@@ -1,15 +1,17 @@
-# -*- coding: utf-8 -*-
-""" Rent-A-Bot
+"""Rent-A-Bot
 
 Your automation resource provider.
 """
 
-__version__ = "0.2.0"
+try:
+    from importlib.metadata import version
+except ImportError:
+    # Python < 3.8
+    from importlib_metadata import version
+
+__version__ = version("rent-a-bot")
 
 # Import logger
 from rentabot.logger import get_logger
-logger = get_logger(__name__)
 
-# Import models and controllers
-import rentabot.models
-import rentabot.controllers
+logger = get_logger(__name__)
