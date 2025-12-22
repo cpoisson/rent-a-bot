@@ -454,6 +454,44 @@ class TestLockResourceByCriteria:
             msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
             pytest.fail(msg)
 
+    def test_lock_resource_by_tags_all_locked(self, app):
+        """
+        Title: Lock a resource by tags when all matching resources are already locked
+
+        Given: Multiple resources exist with specific tags
+        And: All resources with those tags are already locked
+        When: Requesting a lock on a resource using those tags
+        Then: A 403 Forbidden is returned
+        """
+        # Reset Database
+        reset_database()
+
+        # Add some resources
+        create_resources_with_tags()
+
+        # Lock all resources with 'multipurpose' tag
+        tag = "multipurpose"
+
+        # Lock first multipurpose resource
+        response1 = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+        if response1.status_code != 200:
+            msg = f"First lock failed: status code 200 was awaited, received {response1.status_code}."
+            pytest.fail(msg)
+
+        # Lock second multipurpose resource
+        response2 = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+        if response2.status_code != 200:
+            msg = f"Second lock failed: status code 200 was awaited, received {response2.status_code}."
+            pytest.fail(msg)
+
+        # Try to lock another multipurpose resource (all are now locked)
+        response3 = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+
+        # Should be a 403 Forbidden
+        if response3.status_code != 403:
+            msg = f"Oopsie, status code 403 was awaited, received {response3.status_code}."
+            pytest.fail(msg)
+
     def test_lock_resource_by_name(self, app):
         """
         Title: Lock a resource by matching name

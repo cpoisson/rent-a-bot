@@ -107,20 +107,23 @@ def get_an_available_resource(rid=None, name=None, tags=None):
     Returns:
         (Resource) A resource object
     """
+    resource = None
     if rid:
         resource = get_resource_from_id(rid)
     elif name:
         resource = get_resource_from_name(name)
     elif tags:
         resources = get_resources_from_tags(tags)
-        for resource in resources:
-            if resource.lock_token is None:
+        for res in resources:
+            if res.lock_token is None:
+                resource = res
                 break
     else:
         raise ResourceException(message="Bad Request")
 
-    if resource.lock_token is not None:
-        logger.warning(f"Resource already locked. Id : {resource.id}")
+    if resource is None or resource.lock_token is not None:
+        resource_id = resource.id if resource else rid
+        logger.warning(f"Resource already locked. Id : {resource_id}")
         raise ResourceAlreadyLocked(
             message="Cannot lock the requested resource, resource(s) already locked",
             payload={"id": rid, "name": name, "tags": tags},
