@@ -141,7 +141,7 @@ async def get_resource(resource_id: int):
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/lock")
 async def lock_by_id(resource_id: int):
     """Lock a resource by ID."""
-    lock_token, resource = lock_resource(rid=resource_id)
+    lock_token, resource = await lock_resource(rid=resource_id)
     return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
 
 
@@ -150,7 +150,7 @@ async def unlock_by_id(
     resource_id: int, lock_token: Optional[str] = Query(None, alias="lock-token")
 ):
     """Unlock a resource by ID."""
-    unlock_resource(resource_id, lock_token)
+    await unlock_resource(resource_id, lock_token)
     return {"message": "Resource unlocked"}
 
 
@@ -161,7 +161,7 @@ async def lock_by_criterias(
     tag: Optional[List[str]] = Query(None),
 ):
     """Lock a resource by criteria (id, name, or tags)."""
-    lock_token, resource = lock_resource(rid=id, name=name, tags=tag)
+    lock_token, resource = await lock_resource(rid=id, name=name, tags=tag)
     return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
 
 

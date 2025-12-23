@@ -5,7 +5,7 @@ rentabot.models
 This module contains rent-a-bot in-memory resource model.
 """
 
-import threading
+import asyncio
 from typing import Optional
 
 from pydantic import BaseModel
@@ -39,5 +39,5 @@ class Resource(BaseModel):
 # In-memory storage (replaces database)
 resources_by_id: dict[int, Resource] = {}
 resources_by_name: dict[str, Resource] = {}
-resource_lock = threading.Lock()
+resource_lock = asyncio.Lock()
 next_resource_id = 1

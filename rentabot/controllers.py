@@ -131,7 +131,7 @@ def get_an_available_resource(rid=None, name=None, tags=None):
     return resource
 
 
-def lock_resource(rid=None, name=None, tags=None):
+async def lock_resource(rid=None, name=None, tags=None):
     """Lock resource. Raise an exception if the resource is already locked.
 
     Args:
@@ -142,8 +142,8 @@ def lock_resource(rid=None, name=None, tags=None):
     Returns:
         The lock token value
     """
-    # Prevent concurrent access in a multi threaded execution context
-    with resource_lock:
+    # Prevent concurrent access using asyncio lock
+    async with resource_lock:
         resource = get_an_available_resource(rid=rid, name=name, tags=tags)
 
         # Update resource (Pydantic models are immutable, so we create a new one)
@@ -160,7 +160,7 @@ def lock_resource(rid=None, name=None, tags=None):
         return updated_resource.lock_token, updated_resource
 
 
-def unlock_resource(resource_id, lock_token):
+async def unlock_resource(resource_id, lock_token):
     """Unlock resource. Raise an exception if the token is invalid or if the resource is already unlocked.
 
     Args:
