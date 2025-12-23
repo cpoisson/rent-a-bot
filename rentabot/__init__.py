@@ -9,7 +9,7 @@ except ImportError:
     # Python < 3.8
     from importlib_metadata import version
 
-__version__ = version("rent-a-bot")
+__version__ = version("rentabot")
 
 # Import logger
 from rentabot.logger import get_logger

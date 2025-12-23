@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+---
+
+## [0.3.0] - 2025-12-23
+### Added
+- CLI tool for easy server startup (`rentabot` command)
+- Automatic configuration file discovery (current dir, home dir, environment variable)
+- CLI options: `--config`, `--host`, `--port`, `--reload`, `--log-level`
+- Support for `.rentabot.yaml` and `rentabot.yaml` config files
+- Dynamic version reading from package metadata
+- Code quality tooling with ruff (formatting and linting)
+
+### Changed
+- Package name from `rent-a-bot` to `rentabot` for consistency
+- Improved test coverage to near 100%
+
+### Fixed
+- Unbound variable issue in `get_an_available_resource` when all tagged resources are locked
+- Edge cases in resource locking logic
+
 ---
 
 ## [0.2.0] - 2025-12-22
