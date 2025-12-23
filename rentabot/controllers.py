@@ -28,7 +28,7 @@ from rentabot.models import (
 logger = get_logger(__name__)
 
 
-def get_all_ressources():
+def get_all_resources():
     """Returns a list of resources."""
     return list(resources_by_id.values())
 
@@ -78,7 +78,7 @@ def get_resources_from_tags(resource_tags):
     Returns:
         A Resource object.
     """
-    all_resources = get_all_ressources()
+    all_resources = get_all_resources()
     resources = []
 
     # Filter the ones matching the tags

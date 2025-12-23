@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict
 
 from rentabot import __version__
 from rentabot.controllers import (
-    get_all_ressources,
+    get_all_resources,
     get_resource_from_id,
     lock_resource,
     populate_database_from_file,
@@ -110,7 +110,7 @@ class UnlockResponse(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Display all resources in HTML format."""
-    resources = get_all_ressources()
+    resources = get_all_resources()
     return templates.TemplateResponse(
         request=request, name="display_resources.html", context={"resources": resources}
     )
@@ -124,7 +124,7 @@ async def index(request: Request):
 @app.get("/rentabot/api/v1.0/resources", response_model=ResourcesListResponse)
 async def get_resources():
     """Get all resources."""
-    resources = [resource.dict for resource in get_all_ressources()]
+    resources = [resource.dict for resource in get_all_resources()]
     return {"resources": resources}
 
 
