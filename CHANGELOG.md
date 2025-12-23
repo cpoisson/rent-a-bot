@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Logging uses standard logging module instead of daiquiri.
+
 ---
 
 ## [0.3.0] - 2025-12-23
@@ -29,7 +32,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.2.0] - 2025-12-22
 ### Changed
-- Migrated from Flask to FastAPI
+- Migrated from Flask to FastAPIpypi-AgEIcHlwaS5vcmcCJDlmYjllYjU4LTQ1NzUtNDFmMS05NTE0LWUzZDk5NDIwYTIyMQACElsxLFsicmVudC1hLWJvdCJdXQACLFsyLFsiNDVhZTgxMmUtMzA2OC00OTRiLWE3MDMtNWE1YWM4NDE0ODAzIl1dAAAGILtLZeOe9MAeOwT5GHCX8DfHYAUlcCaXVekr3P8om4Gq
 - Replaced SQLAlchemy with Pydantic models and in-memory storage
 - Modernized packaging to use pyproject.toml exclusively
 
