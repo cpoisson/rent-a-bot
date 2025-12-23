@@ -237,7 +237,7 @@ class TestLockUnlockResourceById:
 
         resource = response.json()["resource"]
 
-        if resource["lock-token"] is not None:
+        if resource["lock-token"] != "":
             msg = "Oopsie, the resource seems to be locked."
             pytest.fail(msg)
 
@@ -270,7 +270,7 @@ class TestLockUnlockResourceById:
 
         resource = response.json()["resource"]
 
-        if resource["lock-token"] is None:
+        if resource["lock-token"] == "":
             msg = "Oopsie, the resource seems to be unlocked."
             pytest.fail(msg)
 

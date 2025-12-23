@@ -27,12 +27,12 @@ from rentabot.models import (
 logger = get_logger(__name__)
 
 
-def get_all_resources():
+def get_all_resources() -> list[Resource]:
     """Returns a list of resources."""
     return list(resources_by_id.values())
 
 
-def get_resource_from_id(resource_id):
+def get_resource_from_id(resource_id: int) -> Resource:
     """Returns a Resource object given it's id.
 
     Args:
@@ -49,7 +49,7 @@ def get_resource_from_id(resource_id):
     return resource
 
 
-def get_resources_from_tags(resource_tags):
+def get_resources_from_tags(resource_tags: list[str]) -> list[Resource]:
     """Returns a Resource object list given their tags.
 
     Args:
@@ -78,13 +78,13 @@ def get_resources_from_tags(resource_tags):
 
 async def lock_resource(resource_id: int) -> tuple[str, Resource]:
     """Lock a specific resource by ID.
-    
+
     Args:
         resource_id: The ID of the resource to lock.
-    
+
     Returns:
         tuple: (lock_token, updated_resource)
-        
+
     Raises:
         ResourceNotFound: If resource doesn't exist.
         ResourceAlreadyLocked: If resource is already locked.
@@ -92,27 +92,27 @@ async def lock_resource(resource_id: int) -> tuple[str, Resource]:
     async with resource_lock:
         # Get the resource
         resource = get_resource_from_id(resource_id)
-        
+
         # Check if already locked
-        if resource.lock_token is not None:
+        if resource.lock_token:
             logger.warning(f"Resource already locked. Id: {resource_id}")
             raise ResourceAlreadyLocked(
                 message="Cannot lock the requested resource, resource is already locked",
                 payload={"resource_id": resource_id},
             )
-        
+
         # Lock the resource
         updated_resource = resource.model_copy(
             update={"lock_token": str(uuid4()), "lock_details": "Resource locked"}
         )
-        
+
         resources_by_id[updated_resource.id] = updated_resource
         logger.info(f"Resource locked. Id: {updated_resource.id}")
-        
+
         return updated_resource.lock_token, updated_resource
 
 
-async def unlock_resource(resource_id, lock_token):
+async def unlock_resource(resource_id: int, lock_token: str | None) -> None:
     """Unlock resource. Raise an exception if the token is invalid or if the resource is already unlocked.
 
     Args:
@@ -124,7 +124,7 @@ async def unlock_resource(resource_id, lock_token):
     """
     resource = get_resource_from_id(resource_id)
 
-    if resource.lock_token is None:
+    if not resource.lock_token:
         logger.warning(f"Resource already unlocked. Id : {resource_id}")
         raise ResourceAlreadyUnlocked(
             message="Resource is already unlocked", payload={"resource_id": resource_id}
@@ -139,7 +139,7 @@ async def unlock_resource(resource_id, lock_token):
 
     # Update resource
     updated_resource = resource.model_copy(
-        update={"lock_token": None, "lock_details": "Resource available"}
+        update={"lock_token": "", "lock_details": "Resource available"}
     )
 
     # Update storage
@@ -148,7 +148,7 @@ async def unlock_resource(resource_id, lock_token):
     logger.info(f"Resource unlocked. Id : {resource_id}")
 
 
-def populate_database_from_file(resource_descriptor):
+def populate_database_from_file(resource_descriptor: str) -> list[str]:
     """Populate the in-memory storage using the resources described in a yaml file.
 
     Args:

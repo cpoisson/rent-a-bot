@@ -17,7 +17,7 @@ class Resource(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
-    lock_token: Optional[str] = None
+    lock_token: str = ""
     lock_details: str = "Resource is available"
     endpoint: Optional[str] = None
     tags: Optional[str] = None

@@ -80,7 +80,7 @@ class ResourceResponse(BaseModel):
                 "id": 1,
                 "name": "coffee-machine",
                 "description": "Kitchen coffee machine",
-                "lock_token": None,
+                "lock_token": "",
                 "lock_details": "Resource is available",
                 "endpoint": "tcp://192.168.1.50",
                 "tags": "coffee kitchen food",
@@ -177,7 +177,7 @@ async def lock_by_criterias(
         resource_id = resource.id
     elif tag:
         resources = get_resources_from_tags(tag)
-        available = next((r for r in resources if r.lock_token is None), None)
+        available = next((r for r in resources if not r.lock_token), None)
         if available is None:
             raise ResourceAlreadyLocked(
                 message="No available resource found matching the tag(s)",
