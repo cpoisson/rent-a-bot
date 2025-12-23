@@ -57,7 +57,7 @@ git clone git@github.com:cpoisson/rent-a-bot.git
 
 Navigate to the project directory:
 ```commandline
-cd rent-a-bot
+cd rentabot
 ```
 
 Install the package and dependencies using uv:
@@ -87,8 +87,8 @@ rentabot
 ```commandline
 rentabot --help                           # Show help
 rentabot --version                        # Show version
-rentabot --config path/to/config.yaml    # Use specific config file
-rentabot --host 0.0.0.0 --port 8080      # Custom host and port
+rentabot --config path/to/config.yaml     # Use specific config file
+rentabot --host 0.0.0.0 --port 8080       # Custom host and port
 rentabot --reload                         # Enable auto-reload for development
 rentabot --log-level debug                # Set log level
 ```

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "rent-a-bot"
+name = "rentabot"
 version = "0.2.0"
 description = "Rent-A-Bot, your automation resource provider."
 readme = "README.md"
