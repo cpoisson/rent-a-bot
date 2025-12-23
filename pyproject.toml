@@ -9,7 +9,7 @@ description = "Rent-A-Bot, your automation resource provider."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
-    { name = "Charles Poisson", email = "charles.poisson@gmail.com" }
+    { name = "Charles Poisson" }
 ]
 keywords = ["Resource allocation application for automation"]
 classifiers = [
@@ -54,6 +54,9 @@ test = [
 [project.urls]
 Homepage = "https://github.com/cpoisson/rent-a-bot"
 Repository = "https://github.com/cpoisson/rent-a-bot"
+
+[project.scripts]
+rentabot = "rentabot.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["rentabot"]

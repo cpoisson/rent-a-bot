@@ -69,11 +69,46 @@ uv pip install -e .  # Install the package in editable mode
 
 ## How to run
 
-Start the FastAPI server:
+### Using the CLI (recommended)
+
+The easiest way to run Rent-A-Bot is using the built-in CLI:
 
 ```commandline
-# With uvicorn directly
-uvicorn rentabot.main:app --reload --port 8000
+# Run directly with uvx (no installation needed)
+uvx rentabot
+
+# Or install and run
+uv pip install -e .
+rentabot
+```
+
+**CLI Options:**
+
+```commandline
+rentabot --help                           # Show help
+rentabot --version                        # Show version
+rentabot --config path/to/config.yaml    # Use specific config file
+rentabot --host 0.0.0.0 --port 8080      # Custom host and port
+rentabot --reload                         # Enable auto-reload for development
+rentabot --log-level debug                # Set log level
+```
+
+**Configuration File Discovery:**
+
+The CLI automatically searches for configuration files in this order:
+1. Explicit `--config` argument
+2. `./.rentabot.yaml` or `./rentabot.yaml` in current directory
+3. `~/.rentabot/config.yaml` in home directory
+4. `RENTABOT_RESOURCE_DESCRIPTOR` environment variable
+5. No config (starts with empty resources)
+
+### Using uvicorn directly
+
+You can also start the FastAPI server directly:
+
+```commandline
+# With environment variable
+RENTABOT_RESOURCE_DESCRIPTOR="path/to/config.yaml" uvicorn rentabot.main:app --reload --port 8000
 
 # Or with uv
 uv run uvicorn rentabot.main:app --reload --port 8000
