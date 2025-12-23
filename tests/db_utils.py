@@ -7,13 +7,12 @@ This module contains Rent-A-Bot tests storage utilities.
 """
 
 import rentabot.models
-from rentabot.models import Resource, resources_by_id, resources_by_name
+from rentabot.models import Resource, resources_by_id
 
 
 def reset_database():
     """Clear all resources."""
     resources_by_id.clear()
-    resources_by_name.clear()
     rentabot.models.next_resource_id = 1
 
 
@@ -31,7 +30,6 @@ def create_resources(qty):
             description=f"I'm the resource {x}!",
         )
         resources_by_id[resource.id] = resource
-        resources_by_name[resource.name] = resource
         rentabot.models.next_resource_id += 1
 
 
@@ -48,5 +46,4 @@ def create_resources_with_tags():
             id=rentabot.models.next_resource_id, name=resource_name, tags=resources[resource_name]
         )
         resources_by_id[resource.id] = resource
-        resources_by_name[resource.name] = resource
         rentabot.models.next_resource_id += 1

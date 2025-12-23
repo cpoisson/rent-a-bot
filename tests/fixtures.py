@@ -20,12 +20,10 @@ def app(tmpdir):
 
     # Clear in-memory resources before each test
     rentabot.models.resources_by_id.clear()
-    rentabot.models.resources_by_name.clear()
     rentabot.models.next_resource_id = 1
 
     yield TestClient(fastapi_app)
 
     # Cleanup after test
     rentabot.models.resources_by_id.clear()
-    rentabot.models.resources_by_name.clear()
     rentabot.models.next_resource_id = 1

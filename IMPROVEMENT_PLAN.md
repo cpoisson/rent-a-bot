@@ -18,30 +18,23 @@ Generated: 23 December 2025
 - **Benefit:** Better performance, proper async/await patterns
 - **Priority:** High
 
-### 3. Inconsistent Naming
-**Issues:**
-- Typo: `get_all_ressources()` should be `get_all_resources()` (controllers.py line 29)
-- Mixed conventions: `lock_by_criterias` vs `lock_by_id`
-- **Solution:** Standardize all naming to English spelling and consistent conventions
-- **Priority:** High
-
 ## 🔧 Code Quality Issues
 
-### 4. Remove Custom `.dict` Property
+### 3. Remove Custom `.dict` Property
 **Issue:** Pydantic v2 uses `model_dump()`, the custom `.dict` property is redundant
 - **Current Location:** `rentabot/models.py` lines 24-35`
 - **Solution:** Use built-in `model_dump(by_alias=True)`
 - **Benefit:** Standard Pydantic patterns, less custom code
 - **Priority:** Medium
 
-### 5. Simplify Exception Handlers
+### 4. Simplify Exception Handlers
 **Issue:** Separate handler for each exception type is verbose
 - **Current Location:** `rentabot/main.py` lines 165-191
 - **Solution:** Single handler for `ResourceException` base class
 - **Benefit:** DRY principle, easier maintenance
 - **Priority:** High
 
-### 6. Improve Error Response Structure
+### 5. Improve Error Response Structure
 **Issue:** Inconsistent error payloads
 - **Solution:** Standardize on FastAPI's HTTPException or Problem Details (RFC 7807)
 - **Benefit:** Better API consistency, standard error format
@@ -49,7 +42,7 @@ Generated: 23 December 2025
 
 ## 🚀 Functionality Improvements
 
-### 7. Add Resource Persistence
+### 6. Add Resource Persistence
 **Issue:** In-memory storage loses all data on restart
 - **Solution:** Add optional persistence with SQLite or JSON file
 - **Benefit:** Production-ready, survives restarts
@@ -117,7 +110,7 @@ Generated: 23 December 2025
 7. ⬜ Add lock expiration/TTL
 8. ⬜ Simplify API URL paths
 9. ⬜ Add complete type hints
-10. ⬜ Simplify data model (single dictionary)
+10. ✅ Simplify data model (single dictionary) - **COMPLETED 2025-12-23**
 
 ### Low Priority (Nice to Have)
 11. ⬜ Add persistence option

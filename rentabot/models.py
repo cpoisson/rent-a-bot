@@ -38,6 +38,5 @@ class Resource(BaseModel):
 
 # In-memory storage (replaces database)
 resources_by_id: dict[int, Resource] = {}
-resources_by_name: dict[str, Resource] = {}
 resource_lock = asyncio.Lock()
 next_resource_id = 1

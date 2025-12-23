@@ -18,6 +18,7 @@ from rentabot import __version__
 from rentabot.controllers import (
     get_all_resources,
     get_resource_from_id,
+    get_resources_from_tags,
     lock_resource,
     populate_database_from_file,
     unlock_resource,
@@ -135,13 +136,13 @@ async def get_resource(resource_id: int):
     return {"resource": resource.dict}
 
 
-# - [ POST : Acquire and release resource lock ]
+# - [ POST : Acquire and release resource lock ] ------------------------------
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/lock")
 async def lock_by_id(resource_id: int):
     """Lock a resource by ID."""
-    lock_token, resource = await lock_resource(rid=resource_id)
+    lock_token, resource = await lock_resource(resource_id)
     return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
 
 
@@ -161,7 +162,32 @@ async def lock_by_criterias(
     tag: Optional[List[str]] = Query(None),
 ):
     """Lock a resource by criteria (id, name, or tags)."""
-    lock_token, resource = await lock_resource(rid=id, name=name, tags=tag)
+    resource_id = None
+
+    if id:
+        resource_id = id
+    elif name:
+        resource = next(
+            (r for r in get_all_resources() if r.name == name), None
+        )
+        if resource is None:
+            raise ResourceNotFound(
+                message="Resource not found", payload={"resource_name": name}
+            )
+        resource_id = resource.id
+    elif tag:
+        resources = get_resources_from_tags(tag)
+        available = next((r for r in resources if r.lock_token is None), None)
+        if available is None:
+            raise ResourceAlreadyLocked(
+                message="No available resource found matching the tag(s)",
+                payload={"tags": tag},
+            )
+        resource_id = available.id
+    else:
+        raise ResourceException(message="Bad Request")
+
+    lock_token, resource = await lock_resource(resource_id)
     return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
 
 
