@@ -14,7 +14,6 @@ from rentabot.exceptions import (
     ResourceAlreadyLocked,
     ResourceAlreadyUnlocked,
     ResourceDescriptorIsEmpty,
-    ResourceException,
     ResourceNotFound,
 )
 from rentabot.logger import get_logger
@@ -61,7 +60,6 @@ def get_resources_from_tags(resource_tags: list[str]) -> list[Resource]:
     all_resources = get_all_resources()
     resources = []
 
-    # Filter the ones matching the tags
     for resource in all_resources:
         if not resource.tags:
             continue
@@ -90,10 +88,8 @@ async def lock_resource(resource_id: int) -> tuple[str, Resource]:
         ResourceAlreadyLocked: If resource is already locked.
     """
     async with resource_lock:
-        # Get the resource
         resource = get_resource_from_id(resource_id)
 
-        # Check if already locked
         if resource.lock_token:
             logger.warning(f"Resource already locked. Id: {resource_id}")
             raise ResourceAlreadyLocked(
@@ -101,7 +97,6 @@ async def lock_resource(resource_id: int) -> tuple[str, Resource]:
                 payload={"resource_id": resource_id},
             )
 
-        # Lock the resource
         updated_resource = resource.model_copy(
             update={"lock_token": str(uuid4()), "lock_details": "Resource locked"}
         )
@@ -137,12 +132,10 @@ async def unlock_resource(resource_id: int, lock_token: str | None) -> None:
             payload={"resource": resource.dict, "invalid-lock-token": lock_token},
         )
 
-    # Update resource
     updated_resource = resource.model_copy(
         update={"lock_token": "", "lock_details": "Resource available"}
     )
 
-    # Update storage
     resources_by_id[updated_resource.id] = updated_resource
 
     logger.info(f"Resource unlocked. Id : {resource_id}")
@@ -166,11 +159,9 @@ def populate_database_from_file(resource_descriptor: str) -> list[str]:
     if resources is None:
         raise ResourceDescriptorIsEmpty(resource_descriptor)
 
-    # Import here to avoid circular dependency
     import rentabot.models
     from rentabot.models import resources_by_id
 
-    # Clear existing resources
     resources_by_id.clear()
     rentabot.models.next_resource_id = 1
 
@@ -181,7 +172,6 @@ def populate_database_from_file(resource_descriptor: str) -> list[str]:
         endpoint = resources[resource_name].get("endpoint")
         tags = resources[resource_name].get("tags")
 
-        # Create resource
         resource = Resource(
             id=rentabot.models.next_resource_id,
             name=resource_name,
@@ -190,7 +180,6 @@ def populate_database_from_file(resource_descriptor: str) -> list[str]:
             tags=tags,
         )
 
-        # Add to storage
         resources_by_id[resource.id] = resource
         rentabot.models.next_resource_id += 1
 
