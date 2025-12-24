@@ -125,7 +125,7 @@ async def index(request: Request):
 @app.get("/rentabot/api/v1.0/resources", response_model=ResourcesListResponse)
 async def get_resources():
     """Get all resources."""
-    resources = [resource.dict for resource in get_all_resources()]
+    resources = [resource.model_dump(by_alias=True) for resource in get_all_resources()]
     return {"resources": resources}
 
 
@@ -133,7 +133,7 @@ async def get_resources():
 async def get_resource(resource_id: int):
     """Get a specific resource by ID."""
     resource = get_resource_from_id(resource_id)
-    return {"resource": resource.dict}
+    return {"resource": resource.model_dump(by_alias=True)}
 
 
 # - [ POST : Acquire and release resource lock ] ------------------------------
@@ -143,7 +143,7 @@ async def get_resource(resource_id: int):
 async def lock_by_id(resource_id: int):
     """Lock a resource by ID."""
     lock_token, resource = await lock_resource(resource_id)
-    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
+    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.model_dump(by_alias=True)}
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/unlock")
@@ -188,7 +188,7 @@ async def lock_by_criterias(
         raise ResourceException(message="Bad Request")
 
     lock_token, resource = await lock_resource(resource_id)
-    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
+    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.model_dump(by_alias=True)}
 
 
 # - [ API : Error Handlers ] ----------------------------------------

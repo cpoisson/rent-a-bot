@@ -508,7 +508,7 @@ class TestLockResourceByCriteria:
             id=rentabot.models.next_resource_id,
             name="resource-without-tags",
             description="I have no tags",
-            tags=None,
+            tags="",
         )
         resources_by_id[resource.id] = resource
         rentabot.models.next_resource_id += 1

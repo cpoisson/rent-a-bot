@@ -129,7 +129,7 @@ async def unlock_resource(resource_id: int, lock_token: str | None) -> None:
         logger.warning(msg)
         raise InvalidLockToken(
             message="Cannot unlock resource, the lock token is not valid.",
-            payload={"resource": resource.dict, "invalid-lock-token": lock_token},
+            payload={"resource": resource.model_dump(by_alias=True), "invalid-lock-token": lock_token},
         )
 
     updated_resource = resource.model_copy(
@@ -168,9 +168,9 @@ def populate_database_from_file(resource_descriptor: str) -> list[str]:
     for resource_name in list(resources):
         logger.debug(f"Add resource : {resource_name}")
 
-        description = resources[resource_name].get("description")
-        endpoint = resources[resource_name].get("endpoint")
-        tags = resources[resource_name].get("tags")
+        description = resources[resource_name].get("description", "")
+        endpoint = resources[resource_name].get("endpoint", "")
+        tags = resources[resource_name].get("tags", "")
 
         resource = Resource(
             id=rentabot.models.next_resource_id,
