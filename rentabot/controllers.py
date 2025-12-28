@@ -129,7 +129,10 @@ async def unlock_resource(resource_id: int, lock_token: str | None) -> None:
         logger.warning(msg)
         raise InvalidLockToken(
             message="Cannot unlock resource, the lock token is not valid.",
-            payload={"resource": resource.model_dump(by_alias=True), "invalid-lock-token": lock_token},
+            payload={
+                "resource": resource.model_dump(by_alias=True),
+                "invalid-lock-token": lock_token,
+            },
         )
 
     updated_resource = resource.model_copy(
