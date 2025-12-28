@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Logging uses standard logging module instead of daiquiri.
+- Replaced `threading.Lock` with `asyncio.Lock` for better async compatibility.
+- Fixed typo in `get_all_resources` function name.
+- Removed dual indexing of resources; now using a single dictionary with ID as key.
 
 ---
 

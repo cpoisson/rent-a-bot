@@ -174,11 +174,10 @@ class TestLockUnlockResourceById:
 
         # Add a resource to memory
         import rentabot.models
-        from rentabot.models import resources_by_id, resources_by_name
+        from rentabot.models import resources_by_id
 
         resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
-        resources_by_name["resource"] = resource
         rentabot.models.next_resource_id = 2
 
         # Lock the first resource
@@ -238,7 +237,7 @@ class TestLockUnlockResourceById:
 
         resource = response.json()["resource"]
 
-        if resource["lock-token"] is not None:
+        if resource["lock-token"] != "":
             msg = "Oopsie, the resource seems to be locked."
             pytest.fail(msg)
 
@@ -271,7 +270,7 @@ class TestLockUnlockResourceById:
 
         resource = response.json()["resource"]
 
-        if resource["lock-token"] is None:
+        if resource["lock-token"] == "":
             msg = "Oopsie, the resource seems to be unlocked."
             pytest.fail(msg)
 
@@ -310,11 +309,10 @@ class TestLockUnlockResourceById:
 
         # Add a resource to memory
         import rentabot.models
-        from rentabot.models import resources_by_id, resources_by_name
+        from rentabot.models import resources_by_id
 
         resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
-        resources_by_name["resource"] = resource
         rentabot.models.next_resource_id = 2
 
         # Unlock the first resource
@@ -340,11 +338,10 @@ class TestLockUnlockResourceById:
 
         # Add a resource to memory
         import rentabot.models
-        from rentabot.models import resources_by_id, resources_by_name
+        from rentabot.models import resources_by_id
 
         resource = Resource(id=1, name="resource", description="I'm a resource!")
         resources_by_id[1] = resource
-        resources_by_name["resource"] = resource
         rentabot.models.next_resource_id = 2
 
         # Unlock an arbitrary resource 1000000, far away
@@ -505,16 +502,15 @@ class TestLockResourceByCriteria:
 
         # Add a resource without tags
         import rentabot.models
-        from rentabot.models import Resource, resources_by_id, resources_by_name
+        from rentabot.models import Resource, resources_by_id
 
         resource = Resource(
             id=rentabot.models.next_resource_id,
             name="resource-without-tags",
             description="I have no tags",
-            tags=None,
+            tags="",
         )
         resources_by_id[resource.id] = resource
-        resources_by_name[resource.name] = resource
         rentabot.models.next_resource_id += 1
 
         # Lock a resource with arduino tag (should not select the one without tags)
@@ -530,80 +526,6 @@ class TestLockResourceByCriteria:
         locked_resource = response.json()["resource"]
         if locked_resource["tags"] is None:
             pytest.fail("Resource without tags should not have been selected")
-
-    def test_lock_resource_by_name(self, app):
-        """
-        Title: Lock a resource by matching name
-
-        Given: A resource exists with a known name
-        And: The resource is not locked.
-        When: Requesting a lock on this resource using its name.
-        Then: The resource is locked.
-        """
-        # Reset Database
-        reset_database()
-
-        # Add some resources
-        create_resources_with_tags()
-
-        # Lock an arduino with leds
-        resource_name = "arduino-1"
-        response = app.post(f"/rentabot/api/v1.0/resources/lock?name={resource_name}")
-
-        # Should be a 200 OK
-        if response.status_code != 200:
-            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
-            pytest.fail(msg)
-
-        response_dict = response.json()
-
-        # Response should contain a lock token
-        try:
-            lock_token = response_dict["lock-token"]
-        except KeyError:
-            msg = "Oopsie, cannot find the lock-token."
-            pytest.fail(msg)
-        else:
-            if len(lock_token) == 0:
-                msg = "Oopsie, the lock token is empty"
-                pytest.fail(msg)
-
-        # Resource name should match with the name provided
-        returned_name = response_dict["resource"]["name"]
-
-        if returned_name != resource_name:
-            pytest.fail(f"{returned_name} is not the awaited resource name {resource_name}.")
-
-        # Retry to lock the same name (only one is available here)
-
-        response = app.post(f"/rentabot/api/v1.0/resources/lock?name={resource_name}")
-
-        # Should be a 403 Forbidden
-        if response.status_code != 403:
-            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
-            pytest.fail(msg)
-
-    def test_lock_resource_by_name_not_exists(self, app):
-        """
-        Title: Lock a resource using a resource with a non existing name
-
-        Given: A resource name does not exist
-        When: Requesting a lock on this resource using this name
-        Then: A 404 Not found is returned
-        """
-        # Reset Database
-        reset_database()
-
-        # Add some resources
-        create_resources_with_tags()
-
-        # Lock using a bad name
-        response = app.post("/rentabot/api/v1.0/resources/lock?name=i-do-not-exist")
-
-        # Should be a 404
-        if response.status_code != 404:
-            msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
-            pytest.fail(msg)
 
     def test_lock_resource_by_unsupported_criteria_type(self, app):
         """

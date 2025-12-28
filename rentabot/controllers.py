@@ -14,7 +14,6 @@ from rentabot.exceptions import (
     ResourceAlreadyLocked,
     ResourceAlreadyUnlocked,
     ResourceDescriptorIsEmpty,
-    ResourceException,
     ResourceNotFound,
 )
 from rentabot.logger import get_logger
@@ -22,18 +21,17 @@ from rentabot.models import (
     Resource,
     resource_lock,
     resources_by_id,
-    resources_by_name,
 )
 
 logger = get_logger(__name__)
 
 
-def get_all_ressources():
+def get_all_resources() -> list[Resource]:
     """Returns a list of resources."""
     return list(resources_by_id.values())
 
 
-def get_resource_from_id(resource_id):
+def get_resource_from_id(resource_id: int) -> Resource:
     """Returns a Resource object given it's id.
 
     Args:
@@ -50,26 +48,7 @@ def get_resource_from_id(resource_id):
     return resource
 
 
-def get_resource_from_name(resource_name):
-    """Returns a Resource object given it's name.
-
-    Args:
-        resource_name: the name of the resource.
-
-    Returns:
-        A Resource object.
-    """
-    resource = resources_by_name.get(resource_name)
-
-    if resource is None:
-        logger.warning(f"Resource not found. Name : {resource_name}")
-        raise ResourceNotFound(
-            message="Resource not found", payload={"resource_name": resource_name}
-        )
-    return resource
-
-
-def get_resources_from_tags(resource_tags):
+def get_resources_from_tags(resource_tags: list[str]) -> list[Resource]:
     """Returns a Resource object list given their tags.
 
     Args:
@@ -78,10 +57,9 @@ def get_resources_from_tags(resource_tags):
     Returns:
         A Resource object.
     """
-    all_resources = get_all_ressources()
+    all_resources = get_all_resources()
     resources = []
 
-    # Filter the ones matching the tags
     for resource in all_resources:
         if not resource.tags:
             continue
@@ -96,71 +74,40 @@ def get_resources_from_tags(resource_tags):
     return resources
 
 
-def get_an_available_resource(rid=None, name=None, tags=None):
-    """Returns an available resource object.
+async def lock_resource(resource_id: int) -> tuple[str, Resource]:
+    """Lock a specific resource by ID.
 
     Args:
-        rid (int): The id
-        name (str):
-        tags (list):
+        resource_id: The ID of the resource to lock.
 
     Returns:
-        (Resource) A resource object
+        tuple: (lock_token, updated_resource)
+
+    Raises:
+        ResourceNotFound: If resource doesn't exist.
+        ResourceAlreadyLocked: If resource is already locked.
     """
-    resource = None
-    if rid:
-        resource = get_resource_from_id(rid)
-    elif name:
-        resource = get_resource_from_name(name)
-    elif tags:
-        resources = get_resources_from_tags(tags)
-        for res in resources:
-            if res.lock_token is None:
-                resource = res
-                break
-    else:
-        raise ResourceException(message="Bad Request")
+    async with resource_lock:
+        resource = get_resource_from_id(resource_id)
 
-    if resource is None or resource.lock_token is not None:
-        resource_id = resource.id if resource else rid
-        logger.warning(f"Resource already locked. Id : {resource_id}")
-        raise ResourceAlreadyLocked(
-            message="Cannot lock the requested resource, resource(s) already locked",
-            payload={"id": rid, "name": name, "tags": tags},
-        )
-    return resource
+        if resource.lock_token:
+            logger.warning(f"Resource already locked. Id: {resource_id}")
+            raise ResourceAlreadyLocked(
+                message="Cannot lock the requested resource, resource is already locked",
+                payload={"resource_id": resource_id},
+            )
 
-
-def lock_resource(rid=None, name=None, tags=None):
-    """Lock resource. Raise an exception if the resource is already locked.
-
-    Args:
-        rid (int): The id of the resource to lock.
-        name (str): The name of the resource to lock.
-        tags (list): The tags of the resource to lock.
-
-    Returns:
-        The lock token value
-    """
-    # Prevent concurrent access in a multi threaded execution context
-    with resource_lock:
-        resource = get_an_available_resource(rid=rid, name=name, tags=tags)
-
-        # Update resource (Pydantic models are immutable, so we create a new one)
         updated_resource = resource.model_copy(
             update={"lock_token": str(uuid4()), "lock_details": "Resource locked"}
         )
 
-        # Update both indexes
         resources_by_id[updated_resource.id] = updated_resource
-        resources_by_name[updated_resource.name] = updated_resource
-
-        logger.info(f"Resource locked. Id : {updated_resource.id}")
+        logger.info(f"Resource locked. Id: {updated_resource.id}")
 
         return updated_resource.lock_token, updated_resource
 
 
-def unlock_resource(resource_id, lock_token):
+async def unlock_resource(resource_id: int, lock_token: str | None) -> None:
     """Unlock resource. Raise an exception if the token is invalid or if the resource is already unlocked.
 
     Args:
@@ -172,7 +119,7 @@ def unlock_resource(resource_id, lock_token):
     """
     resource = get_resource_from_id(resource_id)
 
-    if resource.lock_token is None:
+    if not resource.lock_token:
         logger.warning(f"Resource already unlocked. Id : {resource_id}")
         raise ResourceAlreadyUnlocked(
             message="Resource is already unlocked", payload={"resource_id": resource_id}
@@ -182,22 +129,22 @@ def unlock_resource(resource_id, lock_token):
         logger.warning(msg)
         raise InvalidLockToken(
             message="Cannot unlock resource, the lock token is not valid.",
-            payload={"resource": resource.dict, "invalid-lock-token": lock_token},
+            payload={
+                "resource": resource.model_dump(by_alias=True),
+                "invalid-lock-token": lock_token,
+            },
         )
 
-    # Update resource
     updated_resource = resource.model_copy(
-        update={"lock_token": None, "lock_details": "Resource available"}
+        update={"lock_token": "", "lock_details": "Resource available"}
     )
 
-    # Update both indexes
     resources_by_id[updated_resource.id] = updated_resource
-    resources_by_name[updated_resource.name] = updated_resource
 
     logger.info(f"Resource unlocked. Id : {resource_id}")
 
 
-def populate_database_from_file(resource_descriptor):
+def populate_database_from_file(resource_descriptor: str) -> list[str]:
     """Populate the in-memory storage using the resources described in a yaml file.
 
     Args:
@@ -215,23 +162,19 @@ def populate_database_from_file(resource_descriptor):
     if resources is None:
         raise ResourceDescriptorIsEmpty(resource_descriptor)
 
-    # Import here to avoid circular dependency
     import rentabot.models
-    from rentabot.models import resources_by_id, resources_by_name
+    from rentabot.models import resources_by_id
 
-    # Clear existing resources
     resources_by_id.clear()
-    resources_by_name.clear()
     rentabot.models.next_resource_id = 1
 
     for resource_name in list(resources):
         logger.debug(f"Add resource : {resource_name}")
 
-        description = resources[resource_name].get("description")
-        endpoint = resources[resource_name].get("endpoint")
-        tags = resources[resource_name].get("tags")
+        description = resources[resource_name].get("description", "")
+        endpoint = resources[resource_name].get("endpoint", "")
+        tags = resources[resource_name].get("tags", "")
 
-        # Create resource
         resource = Resource(
             id=rentabot.models.next_resource_id,
             name=resource_name,
@@ -240,9 +183,7 @@ def populate_database_from_file(resource_descriptor):
             tags=tags,
         )
 
-        # Add to both indexes
         resources_by_id[resource.id] = resource
-        resources_by_name[resource.name] = resource
         rentabot.models.next_resource_id += 1
 
     return list(resources)

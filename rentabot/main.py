@@ -16,8 +16,9 @@ from pydantic import BaseModel, ConfigDict
 
 from rentabot import __version__
 from rentabot.controllers import (
-    get_all_ressources,
+    get_all_resources,
     get_resource_from_id,
+    get_resources_from_tags,
     lock_resource,
     populate_database_from_file,
     unlock_resource,
@@ -79,7 +80,7 @@ class ResourceResponse(BaseModel):
                 "id": 1,
                 "name": "coffee-machine",
                 "description": "Kitchen coffee machine",
-                "lock_token": None,
+                "lock_token": "",
                 "lock_details": "Resource is available",
                 "endpoint": "tcp://192.168.1.50",
                 "tags": "coffee kitchen food",
@@ -110,7 +111,7 @@ class UnlockResponse(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Display all resources in HTML format."""
-    resources = get_all_ressources()
+    resources = get_all_resources()
     return templates.TemplateResponse(
         request=request, name="display_resources.html", context={"resources": resources}
     )
@@ -124,7 +125,7 @@ async def index(request: Request):
 @app.get("/rentabot/api/v1.0/resources", response_model=ResourcesListResponse)
 async def get_resources():
     """Get all resources."""
-    resources = [resource.dict for resource in get_all_ressources()]
+    resources = [resource.model_dump(by_alias=True) for resource in get_all_resources()]
     return {"resources": resources}
 
 
@@ -132,17 +133,21 @@ async def get_resources():
 async def get_resource(resource_id: int):
     """Get a specific resource by ID."""
     resource = get_resource_from_id(resource_id)
-    return {"resource": resource.dict}
+    return {"resource": resource.model_dump(by_alias=True)}
 
 
-# - [ POST : Acquire and release resource lock ]
+# - [ POST : Acquire and release resource lock ] ------------------------------
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/lock")
 async def lock_by_id(resource_id: int):
     """Lock a resource by ID."""
-    lock_token, resource = lock_resource(rid=resource_id)
-    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
+    lock_token, resource = await lock_resource(resource_id)
+    return {
+        "message": "Resource locked",
+        "lock-token": lock_token,
+        "resource": resource.model_dump(by_alias=True),
+    }
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/unlock")
@@ -150,7 +155,7 @@ async def unlock_by_id(
     resource_id: int, lock_token: Optional[str] = Query(None, alias="lock-token")
 ):
     """Unlock a resource by ID."""
-    unlock_resource(resource_id, lock_token)
+    await unlock_resource(resource_id, lock_token)
     return {"message": "Resource unlocked"}
 
 
@@ -161,8 +166,33 @@ async def lock_by_criterias(
     tag: Optional[List[str]] = Query(None),
 ):
     """Lock a resource by criteria (id, name, or tags)."""
-    lock_token, resource = lock_resource(rid=id, name=name, tags=tag)
-    return {"message": "Resource locked", "lock-token": lock_token, "resource": resource.dict}
+    resource_id = None
+
+    if id:
+        resource_id = id
+    elif name:
+        resource = next((r for r in get_all_resources() if r.name == name), None)
+        if resource is None:
+            raise ResourceNotFound(message="Resource not found", payload={"resource_name": name})
+        resource_id = resource.id
+    elif tag:
+        resources = get_resources_from_tags(tag)
+        available = next((r for r in resources if not r.lock_token), None)
+        if available is None:
+            raise ResourceAlreadyLocked(
+                message="No available resource found matching the tag(s)",
+                payload={"tags": tag},
+            )
+        resource_id = available.id
+    else:
+        raise ResourceException(message="Bad Request")
+
+    lock_token, resource = await lock_resource(resource_id)
+    return {
+        "message": "Resource locked",
+        "lock-token": lock_token,
+        "resource": resource.model_dump(by_alias=True),
+    }
 
 
 # - [ API : Error Handlers ] ----------------------------------------
