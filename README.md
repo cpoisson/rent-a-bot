@@ -236,6 +236,14 @@ source .venv/bin/activate
 pytest
 ```
 
+## Versioning
+
+This project uses [Semantic Versioning](https://semver.org/) for its versioning scheme.
+Versions are formatted as `MAJOR.MINOR.PATCH`, where:
+- **MAJOR** version is incremented for incompatible API changes.
+- **MINOR** version is incremented for adding functionality in a backward-compatible manner.
+- **PATCH** version is incremented for backward-compatible bug fixes.
+
 ---
 
 ## Helpful documentation used to design this application
@@ -246,5 +254,3 @@ pytest
 - [Best practice for a pragmatic restful API](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api#ssl)
 - [HTTP status code](https://restpatterns.mindtouch.us/HTTP_Status_Codes)
 - [OpenAPI Specification](https://swagger.io/specification/)
-- [Implementing API Exceptions](http://flask.pocoo.org/docs/0.12/patterns/apierrors/)
-- [The Hitchhiker's Guide To Python](http://docs.python-guide.org/en/latest/)
