@@ -76,9 +76,7 @@ async def legacy_api_migration_middleware(request: Request, call_next):
         query = request.url.query
 
         # Log deprecation warning
-        logger.warning(
-            f"Using deprecated API path '{path}'. Please migrate to '{new_path}'."
-        )
+        logger.warning(f"Using deprecated API path '{path}'. Please migrate to '{new_path}'.")
 
         # Optional redirect controlled via environment variable
         redirect_enabled = os.getenv("RENTABOT_LEGACY_REDIRECT", "0").lower() in {
@@ -102,6 +100,7 @@ async def legacy_api_migration_middleware(request: Request, call_next):
 
     # Non-legacy paths: proceed as usual
     return await call_next(request)
+
 
 # Setup templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
