@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Removed dual indexing of resources; now using a single dictionary with ID as key.
 - API documentation and examples updated to use `/api/v1/` paths
 - README standardized to port 8000 and corrected query parameter examples
+- Minimum Python version requirement updated to 3.9 (from 3.7)
 
 ### Deprecated
 - Legacy `/rentabot/api/v1.0/` endpoints (will be removed in v1.0.0)

@@ -7,7 +7,7 @@ This module contains rent-a-bot FastAPI application.
 
 import os
 from contextlib import asynccontextmanager
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -132,7 +132,7 @@ class ResourceResponse(BaseModel):
 
 
 class ResourcesListResponse(BaseModel):
-    resources: List[dict]
+    resources: list[dict]
 
 
 class LockResponse(BaseModel):
@@ -210,7 +210,7 @@ async def unlock_by_id(
 async def lock_by_criterias(
     id: Optional[int] = Query(None),
     name: Optional[str] = Query(None),
-    tag: Optional[List[str]] = Query(None),
+    tag: Optional[list[str]] = Query(None),
 ):
     """Lock a resource by criteria (id, name, or tags)."""
     resource_id = None
