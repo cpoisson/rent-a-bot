@@ -123,6 +123,7 @@ async def index(request: Request):
 
 
 @app.get("/rentabot/api/v1.0/resources", response_model=ResourcesListResponse)
+@app.get("/api/v1/resources", response_model=ResourcesListResponse)
 async def get_resources():
     """Get all resources."""
     resources = [resource.model_dump(by_alias=True) for resource in get_all_resources()]
@@ -130,6 +131,7 @@ async def get_resources():
 
 
 @app.get("/rentabot/api/v1.0/resources/{resource_id}")
+@app.get("/api/v1/resources/{resource_id}")
 async def get_resource(resource_id: int):
     """Get a specific resource by ID."""
     resource = get_resource_from_id(resource_id)
@@ -140,6 +142,7 @@ async def get_resource(resource_id: int):
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/lock")
+@app.post("/api/v1/resources/{resource_id}/lock")
 async def lock_by_id(resource_id: int):
     """Lock a resource by ID."""
     lock_token, resource = await lock_resource(resource_id)
@@ -151,6 +154,7 @@ async def lock_by_id(resource_id: int):
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/unlock")
+@app.post("/api/v1/resources/{resource_id}/unlock")
 async def unlock_by_id(
     resource_id: int, lock_token: Optional[str] = Query(None, alias="lock-token")
 ):
@@ -160,6 +164,7 @@ async def unlock_by_id(
 
 
 @app.post("/rentabot/api/v1.0/resources/lock")
+@app.post("/api/v1/resources/lock")
 async def lock_by_criterias(
     id: Optional[int] = Query(None),
     name: Optional[str] = Query(None),
