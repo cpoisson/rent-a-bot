@@ -1,0 +1,28 @@
+#!/bin/sh
+# Pre-commit hook to automatically format code with ruff and run checks
+# Copy this to .git/hooks/pre-commit and make it executable
+
+set -e
+
+echo "Running pre-commit checks..."
+
+# Format code with ruff
+echo "→ Formatting code with ruff..."
+if command -v uv >/dev/null 2>&1; then
+    uv run ruff format .
+else
+    ruff format .
+fi
+
+# Check linting
+echo "→ Checking code with ruff..."
+if command -v uv >/dev/null 2>&1; then
+    uv run ruff check .
+else
+    ruff check .
+fi
+
+# Stage any formatting changes
+git add -u
+
+echo "✓ Pre-commit checks passed!"

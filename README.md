@@ -170,38 +170,38 @@ The web view should be populated with your resources.
 ### RESTful API
 
 #### List resources
-GET /rentabot/api/v1.0/resources
+GET /api/v1/resources
 
 e.g.
 ```commandline
-curl -X GET -i http://localhost:8000/rentabot/api/v1.0/resources
+curl -X GET -i http://localhost:8000/api/v1/resources
 ```
 
 #### Access to a given resource
-GET /rentabot/api/v1.0/resources/{resource_id}
+GET /api/v1/resources/{resource_id}
 
 e.g.
 ```commandline
-curl -X GET -i http://localhost:5000/rentabot/api/v1.0/resources/2
+curl -X GET -i http://localhost:8000/api/v1/resources/2
 ```
 
 #### Lock a resource
-POST /api/v1.0/resources/{resource_id}/lock
+POST /api/v1/resources/{resource_id}/lock
 
 e.g.
 ```commandline
-curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/6/lock
+curl -X POST -i http://localhost:8000/api/v1/resources/6/lock
 ```
 **Note:** If the resource is available, a lock-token will be returned. Otherwise an error code is returned.
 
-### Lock a resource using it's resource id (rid), name (name) or tag (tag).
-POST /api/v1.0/resources/lock
+### Lock a resource using it's resource id (id), name (name) or tag (tag).
+POST /api/v1/resources/lock
 
 e.g.
 ```commandline
-curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?rid\=6
-curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?name\=coffee-maker
-curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?tag\=coffee\&tag\=kitchen
+curl -X POST -i "http://localhost:8000/api/v1/resources/lock?id=6"
+curl -X POST -i "http://localhost:8000/api/v1/resources/lock?name=coffee-maker"
+curl -X POST -i "http://localhost:8000/api/v1/resources/lock?tag=coffee&tag=kitchen"
 ```
 
 **Notes:**
@@ -209,13 +209,16 @@ curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/lock\?tag\=cof
 - If criteria types are exclusive, resource id is prioritized over the name and tags, and name is prioritized over tags.
 
 #### Unlock a resource
-POST /api/v1.0/resources/{resource_id}/unlock?lock-token={resource/lock/token}
+POST /api/v1/resources/{resource_id}/unlock?lock-token={resource/lock/token}
 
 ```commandline
-curl -X POST -i http://localhost:5000/rentabot/api/v1.0/resources/6/unlock\?lock-token\={resource/lock/token}
+curl -X POST -i "http://localhost:8000/api/v1/resources/6/unlock?lock-token={resource/lock/token}"
 ```
 
 **Note:** If the resource is already unlocked or the lock-token is not valid, an error code is returned.
+
+#### Legacy endpoints
+For compatibility, legacy endpoints under `/rentabot/api/v1.0/...` are still available. Please migrate clients to `/api/v1/...` as legacy support will be removed in the next major release.
 
 
 ## How to test

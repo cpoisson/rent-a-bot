@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 
 from fastapi import FastAPI, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict
 
@@ -59,6 +59,48 @@ app = FastAPI(
     version=__version__,
     lifespan=lifespan,
 )
+
+# Legacy/API path constants
+LEGACY_API_PREFIX = "/rentabot/api/v1.0"
+NEW_API_PREFIX = "/api/v1"
+
+
+# Middleware: Deprecation warning and optional redirect for legacy API paths
+@app.middleware("http")
+async def legacy_api_migration_middleware(request: Request, call_next):
+    path = request.url.path
+    if path.startswith(LEGACY_API_PREFIX):
+        # Compose new path preserving the suffix and query
+        suffix = path[len(LEGACY_API_PREFIX) :]
+        new_path = f"{NEW_API_PREFIX}{suffix}"
+        query = request.url.query
+
+        # Log deprecation warning
+        logger.warning(f"Using deprecated API path '{path}'. Please migrate to '{new_path}'.")
+
+        # Optional redirect controlled via environment variable
+        redirect_enabled = os.getenv("RENTABOT_LEGACY_REDIRECT", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if redirect_enabled:
+            target = new_path if not query else f"{new_path}?{query}"
+            return RedirectResponse(url=target, status_code=307)
+
+        # Proceed and attach deprecation headers
+        response = await call_next(request)
+        try:
+            response.headers["Deprecation"] = "true"
+            response.headers["Link"] = f"<{new_path}>; rel=alternate"
+            # Optional 'Sunset' header could be added when date is determined
+        except Exception:
+            pass
+        return response
+
+    # Non-legacy paths: proceed as usual
+    return await call_next(request)
+
 
 # Setup templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
@@ -123,6 +165,7 @@ async def index(request: Request):
 
 
 @app.get("/rentabot/api/v1.0/resources", response_model=ResourcesListResponse)
+@app.get("/api/v1/resources", response_model=ResourcesListResponse)
 async def get_resources():
     """Get all resources."""
     resources = [resource.model_dump(by_alias=True) for resource in get_all_resources()]
@@ -130,6 +173,7 @@ async def get_resources():
 
 
 @app.get("/rentabot/api/v1.0/resources/{resource_id}")
+@app.get("/api/v1/resources/{resource_id}")
 async def get_resource(resource_id: int):
     """Get a specific resource by ID."""
     resource = get_resource_from_id(resource_id)
@@ -140,6 +184,7 @@ async def get_resource(resource_id: int):
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/lock")
+@app.post("/api/v1/resources/{resource_id}/lock")
 async def lock_by_id(resource_id: int):
     """Lock a resource by ID."""
     lock_token, resource = await lock_resource(resource_id)
@@ -151,6 +196,7 @@ async def lock_by_id(resource_id: int):
 
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/unlock")
+@app.post("/api/v1/resources/{resource_id}/unlock")
 async def unlock_by_id(
     resource_id: int, lock_token: Optional[str] = Query(None, alias="lock-token")
 ):
@@ -160,6 +206,7 @@ async def unlock_by_id(
 
 
 @app.post("/rentabot/api/v1.0/resources/lock")
+@app.post("/api/v1/resources/lock")
 async def lock_by_criterias(
     id: Optional[int] = Query(None),
     name: Optional[str] = Query(None),
