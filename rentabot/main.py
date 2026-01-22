@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 
 from fastapi import FastAPI, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict
 
@@ -59,6 +59,49 @@ app = FastAPI(
     version=__version__,
     lifespan=lifespan,
 )
+
+# Legacy/API path constants
+LEGACY_API_PREFIX = "/rentabot/api/v1.0"
+NEW_API_PREFIX = "/api/v1"
+
+
+# Middleware: Deprecation warning and optional redirect for legacy API paths
+@app.middleware("http")
+async def legacy_api_migration_middleware(request: Request, call_next):
+    path = request.url.path
+    if path.startswith(LEGACY_API_PREFIX):
+        # Compose new path preserving the suffix and query
+        suffix = path[len(LEGACY_API_PREFIX) :]
+        new_path = f"{NEW_API_PREFIX}{suffix}"
+        query = request.url.query
+
+        # Log deprecation warning
+        logger.warning(
+            f"Using deprecated API path '{path}'. Please migrate to '{new_path}'."
+        )
+
+        # Optional redirect controlled via environment variable
+        redirect_enabled = os.getenv("RENTABOT_LEGACY_REDIRECT", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        if redirect_enabled:
+            target = new_path if not query else f"{new_path}?{query}"
+            return RedirectResponse(url=target, status_code=307)
+
+        # Proceed and attach deprecation headers
+        response = await call_next(request)
+        try:
+            response.headers["Deprecation"] = "true"
+            response.headers["Link"] = f"<{new_path}>; rel=alternate"
+            # Optional 'Sunset' header could be added when date is determined
+        except Exception:
+            pass
+        return response
+
+    # Non-legacy paths: proceed as usual
+    return await call_next(request)
 
 # Setup templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
