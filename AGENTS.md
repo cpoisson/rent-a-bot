@@ -30,3 +30,13 @@
 - Use semantic versioning 2.0 (https://semver.org/spec/v2.0.0.html)
 - **ALWAYS update CHANGELOG.md** when making changes (add to [Unreleased] section)
 - Follow Keep a Changelog format: Added/Changed/Deprecated/Removed/Fixed/Security
+
+## Commit messages
+- Follow Conventional Commits specification: https://www.conventionalcommits.org/en/v1.0.0/
+- Format: `<type>(<scope>): <description>`
+- Common types: feat, fix, docs, chore, test, refactor, style, perf, ci, build
+- Examples:
+  - `feat(api): add /api/v1 simplified endpoints`
+  - `fix(controllers): handle edge case in resource locking`
+  - `docs: update README with new API paths`
+  - `chore: add pre-commit hook for formatting`
