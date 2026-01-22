@@ -6,11 +6,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Simplified API endpoints under `/api/v1/` path (new standard)
+- Legacy API path deprecation middleware with optional redirect via `RENTABOT_LEGACY_REDIRECT` env var
+- Deprecation headers (`Deprecation: true`, `Link: <alternate>`) on legacy `/rentabot/api/v1.0/` endpoints
+- Pre-commit hook for automatic code formatting and linting with ruff
+
 ### Changed
 - Logging uses standard logging module instead of daiquiri.
 - Replaced `threading.Lock` with `asyncio.Lock` for better async compatibility.
 - Fixed typo in `get_all_resources` function name.
 - Removed dual indexing of resources; now using a single dictionary with ID as key.
+- API documentation and examples updated to use `/api/v1/` paths
+- README standardized to port 8000 and corrected query parameter examples
+
+### Deprecated
+- Legacy `/rentabot/api/v1.0/` endpoints (will be removed in v1.0.0)
 
 ---
 

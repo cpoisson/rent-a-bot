@@ -28,3 +28,5 @@
 
 ## Versionning
 - Use semantic versioning 2.0 (https://semver.org/spec/v2.0.0.html)
+- **ALWAYS update CHANGELOG.md** when making changes (add to [Unreleased] section)
+- Follow Keep a Changelog format: Added/Changed/Deprecated/Removed/Fixed/Security
