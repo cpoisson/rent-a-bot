@@ -14,13 +14,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - **BREAKING**: Tag format changed from space-separated to comma-separated (e.g., `"tag1,tag2,tag3"` instead of `"tag1 tag2 tag3"`)
+- **BREAKING**: Minimum Python version requirement updated to 3.10 (from 3.9, which reached EOL in October 2024)
 - Logging uses standard logging module instead of daiquiri.
 - Replaced `threading.Lock` with `asyncio.Lock` for better async compatibility.
 - Fixed typo in `get_all_resources` function name.
 - Removed dual indexing of resources; now using a single dictionary with ID as key.
 - API documentation and examples updated to use `/api/v1/` paths
 - README standardized to port 8000 and corrected query parameter examples
-- Minimum Python version requirement updated to 3.9 (from 3.7)
 
 ### Deprecated
 - Legacy `/rentabot/api/v1.0/` endpoints (will be removed in v1.0.0)
