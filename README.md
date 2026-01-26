@@ -146,12 +146,12 @@ The resource descriptor is a YAML file. Its purpose is to declare the resources 
 coffee-machine:
     description: "Kitchen coffee machine"
     endpoint: "tcp://192.168.1.50"
-    tags: "coffee kitchen food"
+    tags: "coffee,kitchen,food"
 
 3d-printer-1:
     description: "Basement 3d printer 1"
     endpoint: "tcp://192.168.1.60"
-    tags: "3d-printer basement tool"
+    tags: "3d-printer,basement,tool"
 
 another-resource:
     description: "yet another resource"

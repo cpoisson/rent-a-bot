@@ -63,7 +63,9 @@ def get_resources_from_tags(resource_tags: list[str]) -> list[Resource]:
     for resource in all_resources:
         if not resource.tags:
             continue
-        if set(resource.tags.split()).intersection(set(resource_tags)) == set(resource_tags):
+        # Parse comma-separated tags and strip whitespace
+        parsed_tags = [tag.strip() for tag in resource.tags.split(",") if tag.strip()]
+        if set(parsed_tags).intersection(set(resource_tags)) == set(resource_tags):
             resources.append(resource)
 
     if not resources:

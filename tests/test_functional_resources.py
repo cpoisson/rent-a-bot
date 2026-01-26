@@ -406,7 +406,7 @@ class TestLockResourceByCriteria:
                 pytest.fail(msg)
 
         # Resource tags should match with arduino and leds tags
-        resource_tags = response_dict["resource"]["tags"].split()
+        resource_tags = [tag.strip() for tag in response_dict["resource"]["tags"].split(",")]
 
         if tag_1 not in resource_tags:
             pytest.fail(f"{tag_1} not in resource tags {resource_tags}")

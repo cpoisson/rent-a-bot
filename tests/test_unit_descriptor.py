@@ -20,12 +20,12 @@ RESOURCE_DESCRIPTOR_DUPLICATED = """
 coffee-machine:
     description: "Kitchen coffee machine"
     endpoint: "tcp://192.168.1.50"
-    tags: "coffee kitchen food"
+    tags: "coffee,kitchen,food"
 
 coffee-machine:
     description: "Kitchen coffee machine"
     endpoint: "tcp://192.168.1.50"
-    tags: "coffee kitchen food"
+    tags: "coffee,kitchen,food"
 """
 
 
