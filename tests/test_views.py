@@ -36,3 +36,31 @@ def test_startup_without_resource_descriptor():
         # Restore original environment variable
         if original_value is not None:
             os.environ["RENTABOT_RESOURCE_DESCRIPTOR"] = original_value
+
+
+def test_health_endpoint(app):
+    """
+    Title: Test /health endpoint
+
+    Given: The application is running
+    When: Requesting the /health endpoint
+    Then: A 200 OK status is returned with status "ok"
+    """
+    response = app.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+
+
+def test_readiness_endpoint(app):
+    """
+    Title: Test /readiness endpoint
+
+    Given: The application is running
+    When: Requesting the /readiness endpoint
+    Then: A 200 OK status is returned with status "ready"
+    """
+    response = app.get("/readiness")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ready"

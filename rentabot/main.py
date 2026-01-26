@@ -159,6 +159,31 @@ async def index(request: Request):
     )
 
 
+# - [ Health & Status ] -------------------------------------------------------
+
+
+@app.get("/health")
+async def health():
+    """
+    Health check endpoint for monitoring.
+
+    Returns 200 OK if the service is running.
+    Useful for basic uptime monitoring and load balancer health checks.
+    """
+    return {"status": "ok"}
+
+
+@app.get("/readiness")
+async def readiness():
+    """
+    Readiness check endpoint for Kubernetes.
+
+    Returns 200 OK if the service is ready to accept traffic.
+    Kubernetes uses this to determine if the pod should receive requests.
+    """
+    return {"status": "ready"}
+
+
 # - [ API ] ------------------------------------------------------------------
 
 # - [ GET : Access to resources information ]
