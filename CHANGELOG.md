@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Legacy API path deprecation middleware with optional redirect via `RENTABOT_LEGACY_REDIRECT` env var
 - Deprecation headers (`Deprecation: true`, `Link: <alternate>`) on legacy `/rentabot/api/v1.0/` endpoints
 - Pre-commit hook for automatic code formatting and linting with ruff
+- `/health` endpoint for basic service monitoring and uptime checks
+- `/readiness` endpoint for Kubernetes readiness probes
 
 ### Changed
 - **BREAKING**: Tag format changed from space-separated to comma-separated (e.g., `"tag1,tag2,tag3"` instead of `"tag1 tag2 tag3"`)
-- **BREAKING**: Minimum Python version requirement updated to 3.10 (from 3.9, which reached EOL in October 2024)
+- **BREAKING**: Minimum Python version requirement updated to 3.10 (from 3.9, which reached EOL in October 31st 2025)
 - Logging uses standard logging module instead of daiquiri.
 - Replaced `threading.Lock` with `asyncio.Lock` for better async compatibility.
 - Fixed typo in `get_all_resources` function name.
