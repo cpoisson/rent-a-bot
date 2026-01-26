@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - **BREAKING**: Tag format changed from space-separated to comma-separated (e.g., `"tag1,tag2,tag3"` instead of `"tag1 tag2 tag3"`)
 - **BREAKING**: Minimum Python version requirement updated to 3.10 (from 3.9, which reached EOL in October 31st 2025)
+- Consolidated duplicate exception handlers into single handler following DRY principles
 - Logging uses standard logging module instead of daiquiri.
 - Replaced `threading.Lock` with `asyncio.Lock` for better async compatibility.
 - Fixed typo in `get_all_resources` function name.

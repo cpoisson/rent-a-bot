@@ -24,9 +24,7 @@ from rentabot.controllers import (
     unlock_resource,
 )
 from rentabot.exceptions import (
-    InvalidLockToken,
     ResourceAlreadyLocked,
-    ResourceAlreadyUnlocked,
     ResourceException,
     ResourceNotFound,
 )
@@ -272,24 +270,9 @@ async def lock_by_criterias(
 
 @app.exception_handler(ResourceException)
 async def resource_exception_handler(request: Request, exc: ResourceException):
-    return JSONResponse(status_code=exc.status_code, content=exc.dict)
+    """
+    Consolidated exception handler for all ResourceException subclasses.
 
-
-@app.exception_handler(ResourceNotFound)
-async def resource_not_found_handler(request: Request, exc: ResourceNotFound):
-    return JSONResponse(status_code=exc.status_code, content=exc.dict)
-
-
-@app.exception_handler(ResourceAlreadyLocked)
-async def resource_already_locked_handler(request: Request, exc: ResourceAlreadyLocked):
-    return JSONResponse(status_code=exc.status_code, content=exc.dict)
-
-
-@app.exception_handler(ResourceAlreadyUnlocked)
-async def resource_already_unlocked_handler(request: Request, exc: ResourceAlreadyUnlocked):
-    return JSONResponse(status_code=exc.status_code, content=exc.dict)
-
-
-@app.exception_handler(InvalidLockToken)
-async def invalid_lock_token_handler(request: Request, exc: InvalidLockToken):
+    Handles: ResourceNotFound, ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
+    """
     return JSONResponse(status_code=exc.status_code, content=exc.dict)
