@@ -5,22 +5,22 @@
 coffee-machine:
     description: "Kitchen coffee machine"
     endpoint: "tcp://192.168.1.50"
-    tags: "coffee kitchen food"
+    tags: "coffee,kitchen,food"
 
 3d-printer-1:
     description: "Basement 3d printer 1"
     endpoint: "tcp://192.168.1.60"
-    tags: "3d-printer basement tool"
+    tags: "3d-printer,basement,tool"
 
 3d-printer-2:
     description: "Basement 3d printer 2"
     endpoint: "tcp://192.168.1.61"
-    tags: "3d-printer basement tool"
+    tags: "3d-printer,basement,tool"
 
 sound-system:
     description: "House sound-system"
     endpoint: "tcp://192.168.1.70"
-    tags: "3d-printer basement tool"
+    tags: "3d-printer,basement,tool"
 
 butler-robot:
     description: "Our dear butler robot"
@@ -29,6 +29,3 @@ butler-robot:
 
 the-lone-resource:
     some-unknown-property: ""
-
-
-

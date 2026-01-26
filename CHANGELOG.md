@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Pre-commit hook for automatic code formatting and linting with ruff
 
 ### Changed
+- **BREAKING**: Tag format changed from space-separated to comma-separated (e.g., `"tag1,tag2,tag3"` instead of `"tag1 tag2 tag3"`)
 - Logging uses standard logging module instead of daiquiri.
 - Replaced `threading.Lock` with `asyncio.Lock` for better async compatibility.
 - Fixed typo in `get_all_resources` function name.

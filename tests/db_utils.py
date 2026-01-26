@@ -36,10 +36,10 @@ def create_resources(qty):
 def create_resources_with_tags():
     """Create resources with tags in memory"""
     resources = {
-        "arduino-1": "arduino leds",
-        "arduino-2": "arduino motors",
-        "raspberry-pi-1": "raspberry multipurpose",
-        "raspberry-pi-2": "raspberry multipurpose",
+        "arduino-1": "arduino,leds",
+        "arduino-2": "arduino,motors",
+        "raspberry-pi-1": "raspberry,multipurpose",
+        "raspberry-pi-2": "raspberry,multipurpose",
     }
     for resource_name in list(resources):
         resource = Resource(
