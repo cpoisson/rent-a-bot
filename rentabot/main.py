@@ -275,4 +275,4 @@ async def resource_exception_handler(request: Request, exc: ResourceException):
 
     Handles: ResourceNotFound, ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
     """
-    return JSONResponse(status_code=exc.status_code, content=exc.dict)
+    return JSONResponse(status_code=exc.status_code, content=exc.to_dict())

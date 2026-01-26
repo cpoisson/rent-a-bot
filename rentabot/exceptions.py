@@ -19,8 +19,8 @@ class ResourceException(Exception):
         self.message = message
         self.payload = payload
 
-    @property
-    def dict(self):
+    def to_dict(self):
+        """Serialize exception to dictionary."""
         rv = dict(self.payload or ())
         rv["message"] = self.message
         return rv
