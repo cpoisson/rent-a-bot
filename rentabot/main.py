@@ -326,7 +326,7 @@ async def lock_by_criterias(
     return {
         "message": "Resource locked",
         "lock-token": lock_token,
-        "resource": resource.model_dump(by_alias=True),
+        "resource": resource.model_dump(by_alias=True, mode="json"),
         "locked-at": resource.lock_acquired_at,
         "expires-at": resource.lock_expires_at,
     }
