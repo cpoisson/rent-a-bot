@@ -14,7 +14,7 @@ from typing import Optional
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from rentabot import __version__
 from rentabot.controllers import (
@@ -149,10 +149,10 @@ class ResourcesListResponse(BaseModel):
 
 class LockResponse(BaseModel):
     message: str
-    lock_token: str = Query(alias="lock-token")
+    lock_token: str = Field(alias="lock-token")
     resource: dict
-    locked_at: Optional[datetime] = Query(None, alias="locked-at")
-    expires_at: Optional[datetime] = Query(None, alias="expires-at")
+    locked_at: Optional[datetime] = Field(None, alias="locked-at")
+    expires_at: Optional[datetime] = Field(None, alias="expires-at")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -166,16 +166,16 @@ class LockRequest(BaseModel):
 
 
 class ExtendRequest(BaseModel):
-    lock_token: str = Query(alias="lock-token")
-    additional_ttl: int = Query(alias="additional-ttl")
+    lock_token: str = Field(alias="lock-token")
+    additional_ttl: int = Field(alias="additional-ttl")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class ExtendResponse(BaseModel):
     message: str
-    new_expires_at: datetime = Query(alias="new-expires-at")
-    total_lock_duration: int = Query(alias="total-lock-duration")
+    new_expires_at: datetime = Field(alias="new-expires-at")
+    total_lock_duration: int = Field(alias="total-lock-duration")
 
     model_config = ConfigDict(populate_by_name=True)
 
