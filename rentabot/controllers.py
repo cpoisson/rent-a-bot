@@ -13,6 +13,7 @@ import yaml
 
 from rentabot.exceptions import (
     InvalidLockToken,
+    InvalidTTL,
     ResourceAlreadyLocked,
     ResourceAlreadyUnlocked,
     ResourceDescriptorIsEmpty,
@@ -91,7 +92,7 @@ async def lock_resource(resource_id: int, ttl: int = 3600) -> tuple[str, Resourc
     Raises:
         ResourceNotFound: If resource doesn't exist.
         ResourceAlreadyLocked: If resource is already locked.
-        ValueError: If TTL exceeds max_lock_duration.
+        InvalidTTL: If TTL exceeds max_lock_duration.
     """
     async with resource_lock:
         resource = get_resource_from_id(resource_id)
@@ -105,8 +106,13 @@ async def lock_resource(resource_id: int, ttl: int = 3600) -> tuple[str, Resourc
 
         # Validate TTL against max_lock_duration
         if ttl > resource.max_lock_duration:
-            raise ValueError(
-                f"Requested TTL ({ttl}s) exceeds maximum allowed duration ({resource.max_lock_duration}s)"
+            raise InvalidTTL(
+                message=f"Requested TTL ({ttl}s) exceeds maximum allowed duration ({resource.max_lock_duration}s)",
+                payload={
+                    "resource_id": resource_id,
+                    "ttl": ttl,
+                    "max_lock_duration": resource.max_lock_duration,
+                },
             )
 
         now = datetime.now(timezone.utc)
@@ -186,7 +192,7 @@ async def extend_resource_lock(resource_id: int, lock_token: str, additional_ttl
         ResourceNotFound: If resource doesn't exist.
         ResourceAlreadyUnlocked: If resource is not locked.
         InvalidLockToken: If lock token is invalid.
-        ValueError: If extension would exceed max_lock_duration.
+        InvalidTTL: If extension would exceed max_lock_duration.
     """
     async with resource_lock:
         resource = get_resource_from_id(resource_id)
@@ -229,9 +235,13 @@ async def extend_resource_lock(resource_id: int, lock_token: str, additional_ttl
                 f"Extension would exceed max duration. Id: {resource_id}, "
                 f"Total: {total_duration}s, Max: {resource.max_lock_duration}s"
             )
-            raise ValueError(
-                f"Total lock duration ({total_duration}s) would exceed maximum allowed "
-                f"({resource.max_lock_duration}s)"
+            raise InvalidTTL(
+                message=f"Total lock duration ({total_duration}s) would exceed maximum allowed ({resource.max_lock_duration}s)",
+                payload={
+                    "resource_id": resource_id,
+                    "total_duration": total_duration,
+                    "max_lock_duration": resource.max_lock_duration,
+                },
             )
 
         # Update resource with new expiration
