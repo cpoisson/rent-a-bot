@@ -58,7 +58,7 @@ class ResourceAlreadyLocked(ResourceException):
 
 
 class InvalidLockToken(ResourceException):
-    """Raised a the lock token is not valid."""
+    """Raised when the lock token is not valid."""
 
     status_code = 403  # Forbidden
 
