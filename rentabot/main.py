@@ -340,6 +340,6 @@ async def resource_exception_handler(request: Request, exc: ResourceException):
     """
     Consolidated exception handler for all ResourceException subclasses.
 
-    Handles: ResourceNotFound, ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
+    Handles: ResourceNotFound, ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken, InvalidTTL
     """
     return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
