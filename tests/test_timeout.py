@@ -14,6 +14,7 @@ from rentabot.controllers import (
 )
 from rentabot.exceptions import (
     InvalidLockToken,
+    InvalidTTL,
     ResourceAlreadyLocked,
     ResourceAlreadyUnlocked,
 )
@@ -76,11 +77,11 @@ async def test_lock_with_custom_ttl(sample_resource):
 
 @pytest.mark.asyncio
 async def test_lock_ttl_exceeds_max_duration(sample_resource):
-    """Test that locking with TTL exceeding max_lock_duration raises ValueError."""
+    """Test that locking with TTL exceeding max_lock_duration raises InvalidTTL."""
     # max_lock_duration is 7200s (2 hours)
     excessive_ttl = 10800  # 3 hours
 
-    with pytest.raises(ValueError, match="exceeds maximum allowed duration"):
+    with pytest.raises(InvalidTTL, match="exceeds maximum allowed duration"):
         await lock_resource(1, ttl=excessive_ttl)
 
 
@@ -127,7 +128,7 @@ async def test_extend_unlocked_resource(sample_resource):
 
 @pytest.mark.asyncio
 async def test_extend_exceeds_max_duration(sample_resource):
-    """Test that extension exceeding max_lock_duration raises ValueError."""
+    """Test that extension exceeding max_lock_duration raises InvalidTTL."""
     # Lock with 1800s (30 min), max is 7200s (2 hours)
     lock_token, _ = await lock_resource(1, ttl=1800)
 
@@ -135,7 +136,7 @@ async def test_extend_exceeds_max_duration(sample_resource):
     await asyncio.sleep(0.1)
 
     # Try to extend by 10000s, which when added to remaining time would exceed max 7200s
-    with pytest.raises(ValueError, match="would exceed maximum allowed"):
+    with pytest.raises(InvalidTTL, match="would exceed maximum allowed"):
         await extend_resource_lock(1, lock_token, 10000)
 
 
