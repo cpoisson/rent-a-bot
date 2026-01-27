@@ -19,6 +19,10 @@ class ResourceException(Exception):
         self.message = message
         self.payload = payload
 
+    def __str__(self):
+        """Return the exception message."""
+        return self.message or ""
+
     def to_dict(self):
         """Serialize exception to dictionary."""
         rv = dict(self.payload or ())
@@ -57,6 +61,15 @@ class InvalidLockToken(ResourceException):
     """Raised a the lock token is not valid."""
 
     status_code = 403  # Forbidden
+
+    def __init__(self, *argv, **kwargs):
+        ResourceException.__init__(self, *argv, **kwargs)
+
+
+class InvalidTTL(ResourceException):
+    """Raised when TTL validation fails."""
+
+    status_code = 400  # Bad Request
 
     def __init__(self, *argv, **kwargs):
         ResourceException.__init__(self, *argv, **kwargs)
