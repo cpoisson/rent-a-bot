@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `POST /api/v1/resources/{id}/extend` endpoint to extend lock duration
   - Lock extension with validation against max_lock_duration
   - ISO 8601 timestamp serialization for all datetime fields
+- **Smart reservation queue feature (FIFO)**:
+  - `POST /api/v1/reservations` endpoint to create reservations for unavailable resources
+  - `GET /api/v1/reservations/{id}` endpoint to check reservation status
+  - `POST /api/v1/reservations/{id}/claim` endpoint to claim fulfilled reservations
+  - `DELETE /api/v1/reservations/{id}` endpoint to cancel pending reservations
+  - `GET /api/v1/reservations` endpoint to list all active reservations
+  - Automatic background task to fulfill pending reservations in FIFO order
+  - 60-second claim window for fulfilled reservations
+  - Automatic cleanup of expired pending and unclaimed reservations
+  - Multi-resource locking with atomic rollback on failure
+  - Queue position tracking for pending reservations
+  - Support for custom `max_wait_time` and `ttl` parameters
 
 ### Changed
 - **BREAKING**: Tag format changed from space-separated to comma-separated (e.g., `"tag1,tag2,tag3"` instead of `"tag1 tag2 tag3"`)

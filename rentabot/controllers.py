@@ -12,8 +12,13 @@ from uuid import uuid4
 import yaml
 
 from rentabot.exceptions import (
+    InsufficientResources,
     InvalidLockToken,
     InvalidTTL,
+    ReservationCannotBeCancelled,
+    ReservationClaimExpired,
+    ReservationNotFound,
+    ReservationNotFulfilled,
     ResourceAlreadyLocked,
     ResourceAlreadyUnlocked,
     ResourceDescriptorIsEmpty,
@@ -21,7 +26,10 @@ from rentabot.exceptions import (
 )
 from rentabot.logger import get_logger
 from rentabot.models import (
+    Reservation,
     Resource,
+    reservation_lock,
+    reservations_by_id,
     resource_lock,
     resources_by_id,
 )
@@ -352,3 +360,404 @@ def populate_database_from_file(resource_descriptor: str) -> list[str]:
         rentabot.models.next_resource_id += 1
 
     return list(resources)
+
+
+# - [ Reservation Functions ] ------------------------------------------------
+
+
+async def unlock_resource_by_token(lock_token: str) -> None:
+    """Unlock a resource by its lock token (helper for cleanup).
+
+    Args:
+        lock_token: The lock token to identify the resource.
+
+    Raises:
+        ResourceNotFound: If no resource with this token exists.
+    """
+    async with resource_lock:
+        # Find resource with this token
+        resource = None
+        for res in resources_by_id.values():
+            if res.lock_token == lock_token:
+                resource = res
+                break
+
+        if resource is None:
+            logger.warning(f"No resource found with token: {lock_token}")
+            raise ResourceNotFound(
+                message="No resource found with this token", payload={"lock_token": lock_token}
+            )
+
+        # Unlock it
+        updated_resource = resource.model_copy(
+            update={
+                "lock_token": "",
+                "lock_details": "Resource available",
+                "lock_acquired_at": None,
+                "lock_expires_at": None,
+            }
+        )
+        resources_by_id[updated_resource.id] = updated_resource
+        logger.info(f"Resource unlocked by token. Id: {resource.id}")
+
+
+async def lock_resources_by_tags(tags: list[str], quantity: int, ttl: int = 3600) -> list[Resource]:
+    """Lock multiple resources matching tags atomically.
+
+    Args:
+        tags: List of required tags.
+        quantity: Number of resources to lock.
+        ttl: Time-to-live for locks in seconds.
+
+    Returns:
+        List of locked Resource objects.
+
+    Raises:
+        InsufficientResources: If not enough unlocked resources match the tags.
+        InvalidTTL: If TTL exceeds max_lock_duration for any resource.
+    """
+    async with resource_lock:
+        # Find available resources matching all tags
+        all_resources = get_all_resources()
+        available = []
+
+        for resource in all_resources:
+            if not resource.tags:
+                continue
+
+            # Skip locked resources
+            if resource.lock_token:
+                continue
+
+            # Check if resource has all required tags
+            parsed_tags = [tag.strip() for tag in resource.tags.split(",") if tag.strip()]
+            if set(parsed_tags).intersection(set(tags)) == set(tags):
+                available.append(resource)
+
+        # Check if we have enough resources
+        if len(available) < quantity:
+            raise InsufficientResources(
+                message=f"Not enough resources available. Need {quantity}, found {len(available)}",
+                payload={"tags": tags, "quantity": quantity, "available": len(available)},
+            )
+
+        # Take the first N available resources
+        to_lock = available[:quantity]
+
+        # Validate TTL for all resources first
+        for resource in to_lock:
+            if ttl > resource.max_lock_duration:
+                raise InvalidTTL(
+                    message=f"Requested TTL ({ttl}s) exceeds maximum allowed duration for resource {resource.id} ({resource.max_lock_duration}s)",
+                    payload={
+                        "resource_id": resource.id,
+                        "ttl": ttl,
+                        "max_lock_duration": resource.max_lock_duration,
+                    },
+                )
+
+        # Lock all resources
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(seconds=ttl)
+        locked_resources = []
+
+        for resource in to_lock:
+            updated = resource.model_copy(
+                update={
+                    "lock_token": str(uuid4()),
+                    "lock_details": "Resource locked (reservation)",
+                    "lock_acquired_at": now,
+                    "lock_expires_at": expires_at,
+                }
+            )
+            resources_by_id[updated.id] = updated
+            locked_resources.append(updated)
+            logger.info(f"Resource locked for reservation. Id: {updated.id}, TTL: {ttl}s")
+
+        return locked_resources
+
+
+async def create_reservation(
+    tags: list[str], quantity: int, max_wait_time: int = 3600, ttl: int = 3600
+) -> Reservation:
+    """Create a new reservation.
+
+    Args:
+        tags: Required tags for resources.
+        quantity: Number of resources needed.
+        max_wait_time: Maximum time to wait for fulfillment (seconds, default 3600).
+        ttl: Lock TTL when resources are claimed (seconds, default 3600).
+
+    Returns:
+        Created Reservation object.
+
+    Raises:
+        ResourceNotFound: If no resources match the tags.
+    """
+    # Validate that at least some resources match the tags
+    all_resources = get_all_resources()
+    matching_count = 0
+
+    for resource in all_resources:
+        if not resource.tags:
+            continue
+        parsed_tags = [tag.strip() for tag in resource.tags.split(",") if tag.strip()]
+        if set(parsed_tags).intersection(set(tags)) == set(tags):
+            matching_count += 1
+
+    if matching_count == 0:
+        raise ResourceNotFound(
+            message="No resources match the specified tags", payload={"tags": tags}
+        )
+
+    if matching_count < quantity:
+        logger.warning(
+            f"Not enough total resources match tags. Need {quantity}, total available: {matching_count}"
+        )
+        # Still allow creation - resources might be unlocked later
+
+    now = datetime.now(timezone.utc)
+    reservation_id = f"res_{str(uuid4()).replace('-', '')}"
+
+    reservation = Reservation(
+        reservation_id=reservation_id,
+        tags=tags,
+        quantity=quantity,
+        ttl=ttl,
+        status="pending",
+        created_at=now,
+        expires_at=now + timedelta(seconds=max_wait_time),
+    )
+
+    async with reservation_lock:
+        reservations_by_id[reservation_id] = reservation
+
+    logger.info(f"Reservation created. ID: {reservation_id}, Tags: {tags}, Quantity: {quantity}")
+    return reservation
+
+
+async def get_reservation(reservation_id: str) -> Reservation:
+    """Get a reservation by ID with computed position in queue.
+
+    Args:
+        reservation_id: The reservation ID.
+
+    Returns:
+        Reservation object with position_in_queue filled.
+
+    Raises:
+        ReservationNotFound: If reservation doesn't exist.
+    """
+    async with reservation_lock:
+        reservation = reservations_by_id.get(reservation_id)
+
+        if reservation is None:
+            raise ReservationNotFound(
+                message="Reservation not found", payload={"reservation_id": reservation_id}
+            )
+
+        # Compute position in queue if pending
+        if reservation.status == "pending":
+            pending = [r for r in reservations_by_id.values() if r.status == "pending"]
+            pending.sort(key=lambda r: r.created_at)
+            position = next(
+                (i + 1 for i, r in enumerate(pending) if r.reservation_id == reservation_id),
+                None,
+            )
+            reservation = reservation.model_copy(update={"position_in_queue": position})
+
+        return reservation
+
+
+async def claim_reservation(reservation_id: str) -> Reservation:
+    """Claim a fulfilled reservation.
+
+    Args:
+        reservation_id: The reservation ID to claim.
+
+    Returns:
+        Claimed reservation.
+
+    Raises:
+        ReservationNotFound: If reservation doesn't exist.
+        ReservationNotFulfilled: If reservation is still pending.
+        ReservationClaimExpired: If claim window has expired.
+    """
+    async with reservation_lock:
+        reservation = reservations_by_id.get(reservation_id)
+
+        if reservation is None:
+            raise ReservationNotFound(
+                message="Reservation not found", payload={"reservation_id": reservation_id}
+            )
+
+        if reservation.status == "pending":
+            raise ReservationNotFulfilled(
+                message="Reservation not yet fulfilled",
+                payload={"reservation_id": reservation_id, "status": reservation.status},
+            )
+
+        if reservation.status != "fulfilled":
+            raise ReservationNotFound(
+                message=f"Reservation already {reservation.status}",
+                payload={"reservation_id": reservation_id, "status": reservation.status},
+            )
+
+        # Check claim window
+        now = datetime.now(timezone.utc)
+        if reservation.claim_expires_at and reservation.claim_expires_at <= now:
+            raise ReservationClaimExpired(
+                message="Claim window has expired",
+                payload={
+                    "reservation_id": reservation_id,
+                    "claim_expires_at": reservation.claim_expires_at.isoformat(),
+                },
+            )
+
+        # Mark as claimed
+        updated = reservation.model_copy(update={"status": "claimed", "claimed_at": now})
+        reservations_by_id[reservation_id] = updated
+
+        logger.info(f"Reservation claimed. ID: {reservation_id}")
+        return updated
+
+
+async def cancel_reservation(reservation_id: str) -> None:
+    """Cancel a pending reservation.
+
+    Args:
+        reservation_id: The reservation ID to cancel.
+
+    Raises:
+        ReservationNotFound: If reservation doesn't exist.
+        ReservationCannotBeCancelled: If reservation is fulfilled/claimed.
+    """
+    async with reservation_lock:
+        reservation = reservations_by_id.get(reservation_id)
+
+        if reservation is None:
+            raise ReservationNotFound(
+                message="Reservation not found", payload={"reservation_id": reservation_id}
+            )
+
+        if reservation.status in ["fulfilled", "claimed"]:
+            raise ReservationCannotBeCancelled(
+                message=f"Cannot cancel {reservation.status} reservation",
+                payload={"reservation_id": reservation_id, "status": reservation.status},
+            )
+
+        # Delete the reservation
+        del reservations_by_id[reservation_id]
+        logger.info(f"Reservation cancelled. ID: {reservation_id}")
+
+
+async def list_reservations() -> list[Reservation]:
+    """List all active reservations.
+
+    Returns:
+        List of all reservations with positions computed for pending ones.
+    """
+    async with reservation_lock:
+        reservations = list(reservations_by_id.values())
+
+        # Compute positions for pending reservations
+        pending = [r for r in reservations if r.status == "pending"]
+        pending.sort(key=lambda r: r.created_at)
+
+        result = []
+        for reservation in reservations:
+            if reservation.status == "pending":
+                position = next(
+                    (
+                        i + 1
+                        for i, r in enumerate(pending)
+                        if r.reservation_id == reservation.reservation_id
+                    ),
+                    None,
+                )
+                result.append(reservation.model_copy(update={"position_in_queue": position}))
+            else:
+                result.append(reservation)
+
+        return result
+
+
+async def auto_fulfill_reservations() -> None:
+    """Background task that matches freed resources to pending reservations.
+
+    Runs periodically to clean up expired reservations and fulfill pending ones.
+    """
+    while True:
+        try:
+            await asyncio.sleep(10)  # Check every 10 seconds
+            now = datetime.now(timezone.utc)
+
+            async with reservation_lock:
+                # 1. Clean up expired pending reservations
+                for res_id, reservation in list(reservations_by_id.items()):
+                    if reservation.status == "pending" and reservation.expires_at <= now:
+                        del reservations_by_id[res_id]
+                        logger.info(
+                            f"Expired pending reservation {res_id} (waited {(now - reservation.created_at).total_seconds()}s)"
+                        )
+
+                    # 2. Clean up expired unclaimed fulfilled reservations
+                    elif (
+                        reservation.status == "fulfilled"
+                        and reservation.claim_expires_at
+                        and reservation.claim_expires_at <= now
+                    ):
+                        # Unlock the resources
+                        for token in reservation.lock_tokens:
+                            try:
+                                await unlock_resource_by_token(token)
+                            except ResourceNotFound:
+                                logger.warning(
+                                    f"Resource with token {token} not found during reservation cleanup"
+                                )
+
+                        del reservations_by_id[res_id]
+                        logger.info(f"Expired unclaimed reservation {res_id}")
+
+                # 3. Try to fulfill pending reservations (FIFO)
+                pending = [r for r in reservations_by_id.values() if r.status == "pending"]
+                pending.sort(key=lambda r: r.created_at)  # FIFO
+
+                for reservation in pending:
+                    try:
+                        # Try to lock resources matching tags
+                        locked = await lock_resources_by_tags(
+                            tags=reservation.tags,
+                            quantity=reservation.quantity,
+                            ttl=reservation.ttl,
+                        )
+
+                        # Success! Mark as fulfilled
+                        fulfilled_at = datetime.now(timezone.utc)
+                        updated = reservation.model_copy(
+                            update={
+                                "status": "fulfilled",
+                                "fulfilled_at": fulfilled_at,
+                                "claim_expires_at": fulfilled_at + timedelta(seconds=60),
+                                "resource_ids": [r.id for r in locked],
+                                "lock_tokens": [r.lock_token for r in locked],
+                            }
+                        )
+                        reservations_by_id[reservation.reservation_id] = updated
+
+                        logger.info(
+                            f"Fulfilled reservation {reservation.reservation_id} "
+                            f"with resources {[r.id for r in locked]}"
+                        )
+
+                    except InsufficientResources:
+                        # Not enough resources yet, keep waiting
+                        continue
+                    except Exception as e:
+                        logger.error(
+                            f"Error fulfilling reservation {reservation.reservation_id}: {e}",
+                            exc_info=True,
+                        )
+
+        except Exception as e:
+            logger.error(f"Error in auto_fulfill_reservations task: {e}", exc_info=True)
