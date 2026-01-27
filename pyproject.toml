@@ -39,12 +39,14 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
+    "pytest-asyncio",
     "httpx",
     "ruff",
 ]
 test = [
     "pytest",
     "pytest-cov",
+    "pytest-asyncio",
     "httpx",
 ]
 
@@ -70,6 +72,8 @@ include = [
 [tool.pytest.ini_options]
 addopts = "-vv --showlocals --cov=rentabot --cov-report term-missing"
 testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 include = ["rentabot/*.py"]

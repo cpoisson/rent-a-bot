@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Pre-commit hook for automatic code formatting and linting with ruff
 - `/health` endpoint for basic service monitoring and uptime checks
 - `/readiness` endpoint for Kubernetes readiness probes
+- **Lock timeout/TTL feature with automatic expiration**:
+  - `ttl` parameter on lock endpoints (default: 3600s = 1 hour)
+  - Automatic background task to expire locks after TTL
+  - `lock_acquired_at`, `lock_expires_at`, and `max_lock_duration` fields on resources
+  - Maximum lock duration enforcement (default: 24 hours per resource)
+  - `POST /api/v1/resources/{id}/extend` endpoint to extend lock duration
+  - Lock extension with validation against max_lock_duration
+  - ISO 8601 timestamp serialization for all datetime fields
 
 ### Changed
 - **BREAKING**: Tag format changed from space-separated to comma-separated (e.g., `"tag1,tag2,tag3"` instead of `"tag1 tag2 tag3"`)
@@ -25,6 +33,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Removed dual indexing of resources; now using a single dictionary with ID as key.
 - API documentation and examples updated to use `/api/v1/` paths
 - README standardized to port 8000 and corrected query parameter examples
+- Lock and unlock endpoints now clear/set timestamp fields appropriately
+- All resource serialization uses `mode='json'` for proper datetime handling
 
 ### Deprecated
 - Legacy `/rentabot/api/v1.0/` endpoints (will be removed in v1.0.0)
@@ -52,7 +62,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.2.0] - 2025-12-22
 ### Changed
-- Migrated from Flask to FastAPIpypi-AgEIcHlwaS5vcmcCJDlmYjllYjU4LTQ1NzUtNDFmMS05NTE0LWUzZDk5NDIwYTIyMQACElsxLFsicmVudC1hLWJvdCJdXQACLFsyLFsiNDVhZTgxMmUtMzA2OC00OTRiLWE3MDMtNWE1YWM4NDE0ODAzIl1dAAAGILtLZeOe9MAeOwT5GHCX8DfHYAUlcCaXVekr3P8om4Gq
+- Migrated from Flask to FastAPI
 - Replaced SQLAlchemy with Pydantic models and in-memory storage
 - Modernized packaging to use pyproject.toml exclusively
 

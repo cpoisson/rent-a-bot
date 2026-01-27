@@ -5,17 +5,21 @@ rentabot.main
 This module contains rent-a-bot FastAPI application.
 """
 
+import asyncio
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Optional
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from rentabot import __version__
 from rentabot.controllers import (
+    auto_expire_locks,
+    extend_resource_lock,
     get_all_resources,
     get_resource_from_id,
     get_resources_from_tags,
@@ -46,8 +50,18 @@ async def lifespan(app: FastAPI):
             "No RENTABOT_RESOURCE_DESCRIPTOR environment variable set, starting with empty resources"
         )
 
+    # Start background task for auto-expiring locks
+    expire_task = asyncio.create_task(auto_expire_locks())
+    logger.info("Started auto-expire locks background task")
+
     yield
-    # Shutdown (if needed)
+
+    # Shutdown - cancel background task
+    expire_task.cancel()
+    try:
+        await expire_task
+    except asyncio.CancelledError:
+        logger.info("Auto-expire locks task cancelled")
 
 
 # Create FastAPI app
@@ -135,14 +149,35 @@ class ResourcesListResponse(BaseModel):
 
 class LockResponse(BaseModel):
     message: str
-    lock_token: str = Query(alias="lock-token")
+    lock_token: str = Field(alias="lock-token")
     resource: dict
+    locked_at: Optional[datetime] = Field(None, alias="locked-at")
+    expires_at: Optional[datetime] = Field(None, alias="expires-at")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class UnlockResponse(BaseModel):
     message: str
+
+
+class LockRequest(BaseModel):
+    ttl: Optional[int] = 3600  # Default 1 hour
+
+
+class ExtendRequest(BaseModel):
+    lock_token: str = Field(alias="lock-token")
+    additional_ttl: int = Field(alias="additional-ttl")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class ExtendResponse(BaseModel):
+    message: str
+    new_expires_at: datetime = Field(alias="new-expires-at")
+    total_lock_duration: int = Field(alias="total-lock-duration")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 # - [ Web View ] --------------------------------------------------------------
@@ -191,7 +226,9 @@ async def readiness():
 @app.get("/api/v1/resources", response_model=ResourcesListResponse)
 async def get_resources():
     """Get all resources."""
-    resources = [resource.model_dump(by_alias=True) for resource in get_all_resources()]
+    resources = [
+        resource.model_dump(by_alias=True, mode="json") for resource in get_all_resources()
+    ]
     return {"resources": resources}
 
 
@@ -200,7 +237,7 @@ async def get_resources():
 async def get_resource(resource_id: int):
     """Get a specific resource by ID."""
     resource = get_resource_from_id(resource_id)
-    return {"resource": resource.model_dump(by_alias=True)}
+    return {"resource": resource.model_dump(by_alias=True, mode="json")}
 
 
 # - [ POST : Acquire and release resource lock ] ------------------------------
@@ -208,13 +245,16 @@ async def get_resource(resource_id: int):
 
 @app.post("/rentabot/api/v1.0/resources/{resource_id}/lock")
 @app.post("/api/v1/resources/{resource_id}/lock")
-async def lock_by_id(resource_id: int):
-    """Lock a resource by ID."""
-    lock_token, resource = await lock_resource(resource_id)
+async def lock_by_id(resource_id: int, request: Optional[LockRequest] = None):
+    """Lock a resource by ID with optional TTL."""
+    ttl = request.ttl if request and request.ttl is not None else 3600
+    lock_token, resource = await lock_resource(resource_id, ttl=ttl)
     return {
         "message": "Resource locked",
         "lock-token": lock_token,
-        "resource": resource.model_dump(by_alias=True),
+        "resource": resource.model_dump(by_alias=True, mode="json"),
+        "locked-at": resource.lock_acquired_at,
+        "expires-at": resource.lock_expires_at,
     }
 
 
@@ -228,14 +268,38 @@ async def unlock_by_id(
     return {"message": "Resource unlocked"}
 
 
+@app.post("/rentabot/api/v1.0/resources/{resource_id}/extend")
+@app.post("/api/v1/resources/{resource_id}/extend")
+async def extend_lock(
+    resource_id: int,
+    lock_token: str = Query(alias="lock-token"),
+    additional_ttl: int = Query(alias="additional-ttl"),
+):
+    """Extend the lock duration for a locked resource."""
+    resource = await extend_resource_lock(resource_id, lock_token, additional_ttl)
+
+    # Calculate total lock duration
+    if resource.lock_acquired_at and resource.lock_expires_at:
+        total_duration = int((resource.lock_expires_at - resource.lock_acquired_at).total_seconds())
+    else:
+        total_duration = additional_ttl
+
+    return {
+        "message": "Lock extended",
+        "new-expires-at": resource.lock_expires_at,
+        "total-lock-duration": total_duration,
+    }
+
+
 @app.post("/rentabot/api/v1.0/resources/lock")
 @app.post("/api/v1/resources/lock")
 async def lock_by_criterias(
+    request: Optional[LockRequest] = None,
     id: Optional[int] = Query(None),
     name: Optional[str] = Query(None),
     tag: Optional[list[str]] = Query(None),
 ):
-    """Lock a resource by criteria (id, name, or tags)."""
+    """Lock a resource by criteria (id, name, or tags) with optional TTL."""
     resource_id = None
 
     if id:
@@ -257,11 +321,14 @@ async def lock_by_criterias(
     else:
         raise ResourceException(message="Bad Request")
 
-    lock_token, resource = await lock_resource(resource_id)
+    ttl = request.ttl if request and request.ttl is not None else 3600
+    lock_token, resource = await lock_resource(resource_id, ttl=ttl)
     return {
         "message": "Resource locked",
         "lock-token": lock_token,
-        "resource": resource.model_dump(by_alias=True),
+        "resource": resource.model_dump(by_alias=True, mode="json"),
+        "locked-at": resource.lock_acquired_at,
+        "expires-at": resource.lock_expires_at,
     }
 
 
@@ -273,6 +340,6 @@ async def resource_exception_handler(request: Request, exc: ResourceException):
     """
     Consolidated exception handler for all ResourceException subclasses.
 
-    Handles: ResourceNotFound, ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken
+    Handles: ResourceNotFound, ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken, InvalidTTL
     """
     return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
