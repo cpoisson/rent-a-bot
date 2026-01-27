@@ -548,3 +548,254 @@ class TestLockResourceByCriteria:
         if response.status_code != 400:
             msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
             pytest.fail(msg)
+
+
+class TestExtendResourceLock:
+    """
+    Title: Extend a resource lock duration.
+
+    As: An automation developer.
+    I want: To extend the duration of an existing lock on a resource.
+    So that: I can continue using the resource without losing the lock.
+    """
+
+    def test_extend_lock_success(self, app):
+        """
+        Title: Extend a lock successfully.
+
+        Given: A resource exists.
+        And: The resource is locked.
+        When: Requesting to extend the lock with valid token and additional TTL.
+        Then: The lock is extended and new expiration time is returned.
+        """
+        # Reset Database
+        reset_database()
+
+        # Add a resource to memory
+        import rentabot.models
+        from rentabot.models import resources_by_id
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
+        resource = resource.model_copy(update={"max_lock_duration": 7200})
+        resources_by_id[1] = resource
+        rentabot.models.next_resource_id = 2
+
+        # Lock the resource
+        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        if response.status_code != 200:
+            msg = f"Oopsie, lock failed with status code {response.status_code}."
+            pytest.fail(msg)
+
+        lock_token = response.json()["lock-token"]
+
+        # Extend the lock
+        additional_ttl = 600
+        response = app.post(
+            f"/rentabot/api/v1.0/resources/1/extend?lock-token={lock_token}&additional-ttl={additional_ttl}"
+        )
+
+        # Should be a 200 OK
+        if response.status_code != 200:
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
+            pytest.fail(msg)
+
+        # Response should contain expected fields
+        response_dict = response.json()
+        if "message" not in response_dict:
+            pytest.fail("Response should contain 'message' field")
+        if "new-expires-at" not in response_dict:
+            pytest.fail("Response should contain 'new-expires-at' field")
+        if "total-lock-duration" not in response_dict:
+            pytest.fail("Response should contain 'total-lock-duration' field")
+
+    def test_extend_lock_success_new_api(self, app):
+        """
+        Title: Extend a lock successfully using new API path.
+
+        Given: A resource exists.
+        And: The resource is locked.
+        When: Requesting to extend the lock using /api/v1 path.
+        Then: The lock is extended and new expiration time is returned.
+        """
+        # Reset Database
+        reset_database()
+
+        # Add a resource to memory
+        import rentabot.models
+        from rentabot.models import resources_by_id
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
+        resource = resource.model_copy(update={"max_lock_duration": 7200})
+        resources_by_id[1] = resource
+        rentabot.models.next_resource_id = 2
+
+        # Lock the resource
+        response = app.post("/api/v1/resources/1/lock")
+        if response.status_code != 200:
+            msg = f"Oopsie, lock failed with status code {response.status_code}."
+            pytest.fail(msg)
+
+        lock_token = response.json()["lock-token"]
+
+        # Extend the lock using new API path
+        additional_ttl = 600
+        response = app.post(
+            f"/api/v1/resources/1/extend?lock-token={lock_token}&additional-ttl={additional_ttl}"
+        )
+
+        # Should be a 200 OK
+        if response.status_code != 200:
+            msg = f"Oopsie, status code 200 was awaited, received {response.status_code}."
+            pytest.fail(msg)
+
+        # Response should contain expected fields
+        response_dict = response.json()
+        if "message" not in response_dict:
+            pytest.fail("Response should contain 'message' field")
+        if "new-expires-at" not in response_dict:
+            pytest.fail("Response should contain 'new-expires-at' field")
+        if "total-lock-duration" not in response_dict:
+            pytest.fail("Response should contain 'total-lock-duration' field")
+
+    def test_extend_lock_invalid_token(self, app):
+        """
+        Title: Extend a lock with invalid token.
+
+        Given: A resource exists.
+        And: The resource is locked.
+        When: Requesting to extend the lock with an invalid token.
+        Then: A 403 Forbidden status code is returned.
+        """
+        # Reset Database
+        reset_database()
+
+        # Add a resource to memory
+        import rentabot.models
+        from rentabot.models import resources_by_id
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
+        resource = resource.model_copy(update={"max_lock_duration": 7200})
+        resources_by_id[1] = resource
+        rentabot.models.next_resource_id = 2
+
+        # Lock the resource
+        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        if response.status_code != 200:
+            msg = f"Oopsie, lock failed with status code {response.status_code}."
+            pytest.fail(msg)
+
+        # Try to extend with invalid token
+        invalid_token = "verybadtokenbadbadbad"
+        response = app.post(
+            f"/rentabot/api/v1.0/resources/1/extend?lock-token={invalid_token}&additional-ttl=600"
+        )
+
+        # Should be a 403 Forbidden
+        if response.status_code != 403:
+            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
+            pytest.fail(msg)
+
+    def test_extend_lock_unlocked_resource(self, app):
+        """
+        Title: Extend a lock on unlocked resource.
+
+        Given: A resource exists.
+        And: The resource is not locked.
+        When: Requesting to extend the lock.
+        Then: A 403 Forbidden status code is returned.
+        """
+        # Reset Database
+        reset_database()
+
+        # Add a resource to memory
+        import rentabot.models
+        from rentabot.models import resources_by_id
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
+        resource = resource.model_copy(update={"max_lock_duration": 7200})
+        resources_by_id[1] = resource
+        rentabot.models.next_resource_id = 2
+
+        # Try to extend without locking first
+        response = app.post(
+            "/rentabot/api/v1.0/resources/1/extend?lock-token=anytoken&additional-ttl=600"
+        )
+
+        # Should be a 403 Forbidden
+        if response.status_code != 403:
+            msg = f"Oopsie, status code 403 was awaited, received {response.status_code}."
+            pytest.fail(msg)
+
+    def test_extend_lock_resource_not_found(self, app):
+        """
+        Title: Extend a lock on non-existent resource.
+
+        Given: A resource does not exist.
+        When: Requesting to extend a lock on this resource.
+        Then: A 404 Not Found status code is returned.
+        """
+        # Reset Database
+        reset_database()
+
+        # Add a resource to memory
+        import rentabot.models
+        from rentabot.models import resources_by_id
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
+        resources_by_id[1] = resource
+        rentabot.models.next_resource_id = 2
+
+        # Try to extend a non-existent resource
+        resource_id = 100000
+        response = app.post(
+            f"/rentabot/api/v1.0/resources/{resource_id}/extend?lock-token=anytoken&additional-ttl=600"
+        )
+
+        # Should be a 404 Not Found
+        if response.status_code != 404:
+            msg = f"Oopsie, status code 404 was awaited, received {response.status_code}."
+            pytest.fail(msg)
+
+        # Check that the 404 returned is the app 404 and not a generic one
+        response_json = response.json()
+        assert response_json["resource_id"] == resource_id
+
+    def test_extend_lock_exceeds_max_duration(self, app):
+        """
+        Title: Extend a lock beyond maximum duration.
+
+        Given: A resource exists with a max lock duration.
+        And: The resource is locked.
+        When: Requesting to extend the lock beyond the maximum duration.
+        Then: A 400 Bad Request status code is returned.
+        """
+        # Reset Database
+        reset_database()
+
+        # Add a resource to memory
+        import rentabot.models
+        from rentabot.models import resources_by_id
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
+        resource = resource.model_copy(update={"max_lock_duration": 7200})  # 2 hours max
+        resources_by_id[1] = resource
+        rentabot.models.next_resource_id = 2
+
+        # Lock the resource with initial TTL
+        response = app.post("/rentabot/api/v1.0/resources/1/lock?ttl=3600")  # 1 hour
+        if response.status_code != 200:
+            msg = f"Oopsie, lock failed with status code {response.status_code}."
+            pytest.fail(msg)
+
+        lock_token = response.json()["lock-token"]
+
+        # Try to extend by excessive amount (total would exceed max_lock_duration)
+        excessive_ttl = 10000  # Would result in total > 7200
+        response = app.post(
+            f"/rentabot/api/v1.0/resources/1/extend?lock-token={lock_token}&additional-ttl={excessive_ttl}"
+        )
+
+        # Should be a 400 Bad Request
+        if response.status_code != 400:
+            msg = f"Oopsie, status code 400 was awaited, received {response.status_code}."
+            pytest.fail(msg)
