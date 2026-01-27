@@ -20,7 +20,7 @@ class ResourceException(Exception):
         self.payload = payload
 
     def __str__(self):
-        """Return the exception message."""
+        """Return string representation of the exception."""
         return self.message or ""
 
     def to_dict(self):
@@ -58,7 +58,7 @@ class ResourceAlreadyLocked(ResourceException):
 
 
 class InvalidLockToken(ResourceException):
-    """Raised a the lock token is not valid."""
+    """Raised when the lock token is not valid."""
 
     status_code = 403  # Forbidden
 

@@ -110,7 +110,7 @@ async def lock_resource(resource_id: int, ttl: int = 3600) -> tuple[str, Resourc
                 message=f"Requested TTL ({ttl}s) exceeds maximum allowed duration ({resource.max_lock_duration}s)",
                 payload={
                     "resource_id": resource_id,
-                    "requested_ttl": ttl,
+                    "ttl": ttl,
                     "max_lock_duration": resource.max_lock_duration,
                 },
             )
@@ -241,7 +241,6 @@ async def extend_resource_lock(resource_id: int, lock_token: str, additional_ttl
                     "resource_id": resource_id,
                     "total_duration": total_duration,
                     "max_lock_duration": resource.max_lock_duration,
-                    "additional_ttl": additional_ttl,
                 },
             )
 
@@ -269,8 +268,11 @@ async def auto_expire_locks() -> None:
             now = datetime.now(timezone.utc)
             expired_resources = []
 
-            # Find expired locks
-            for resource in resources_by_id.values():
+            # Find expired locks - take snapshot while holding lock to avoid race condition
+            async with resource_lock:
+                resources_snapshot = list(resources_by_id.values())
+
+            for resource in resources_snapshot:
                 if (
                     resource.lock_token
                     and resource.lock_expires_at is not None
