@@ -268,8 +268,11 @@ async def auto_expire_locks() -> None:
             now = datetime.now(timezone.utc)
             expired_resources = []
 
-            # Find expired locks
-            for resource in resources_by_id.values():
+            # Find expired locks - take snapshot while holding lock to avoid race condition
+            async with resource_lock:
+                resources_snapshot = list(resources_by_id.values())
+
+            for resource in resources_snapshot:
                 if (
                     resource.lock_token
                     and resource.lock_expires_at is not None
