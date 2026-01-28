@@ -495,6 +495,7 @@ async def create_reservation(
     Raises:
         InvalidReservationTags: If tags list is empty.
         ResourceNotFound: If no resources match the tags.
+        InvalidTTL: If not enough resources can accommodate the requested TTL.
     """
     # Validate that tags is not empty
     if not tags:
@@ -506,6 +507,7 @@ async def create_reservation(
     # Validate that at least some resources match the tags
     all_resources = get_all_resources()
     matching_count = 0
+    compatible_count = 0
 
     for resource in all_resources:
         if not resource.tags:
@@ -513,17 +515,27 @@ async def create_reservation(
         parsed_tags = [tag.strip() for tag in resource.tags.split(",") if tag.strip()]
         if set(parsed_tags).intersection(set(tags)) == set(tags):
             matching_count += 1
+            # Also check if this resource can accommodate the requested TTL
+            if ttl <= resource.max_lock_duration:
+                compatible_count += 1
 
     if matching_count == 0:
         raise ResourceNotFound(
             message="No resources match the specified tags", payload={"tags": tags}
         )
 
-    if matching_count < quantity:
-        logger.warning(
-            f"Not enough total resources match tags. Need {quantity}, total available: {matching_count}"
+    # Validate that enough resources can accommodate the requested TTL
+    if compatible_count < quantity:
+        raise InvalidTTL(
+            message=f"Requested TTL ({ttl}s) exceeds max_lock_duration for available resources. Need {quantity} compatible resources, found {compatible_count}",
+            payload={
+                "tags": tags,
+                "quantity": quantity,
+                "ttl": ttl,
+                "compatible_count": compatible_count,
+                "matching_count": matching_count,
+            },
         )
-        # Still allow creation - resources might be unlocked later
 
     now = datetime.now(timezone.utc)
     reservation_id = f"res_{str(uuid4()).replace('-', '')}"

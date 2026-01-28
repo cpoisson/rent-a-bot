@@ -48,6 +48,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Lock and unlock endpoints now clear/set timestamp fields appropriately
 - All resource serialization uses `mode='json'` for proper datetime handling
 
+### Fixed
+- Early TTL validation in `create_reservation()` to prevent impossible-to-fulfill reservations
+  - Now validates that sufficient resources can accommodate requested TTL before creating reservation
+  - Provides clear error message when TTL exceeds `max_lock_duration` for available resources
+  - Prevents reservations from staying "pending" indefinitely due to TTL constraints
+
 ### Deprecated
 - Legacy `/rentabot/api/v1.0/` endpoints (will be removed in v1.0.0)
 

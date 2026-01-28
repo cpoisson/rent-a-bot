@@ -8,11 +8,13 @@ This module contains rent-a-bot in-memory resource model.
 import asyncio
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Resource(BaseModel):
     """Resource class."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     id: int
     name: str
@@ -28,6 +30,8 @@ class Resource(BaseModel):
 
 class Reservation(BaseModel):
     """Represents a resource reservation in the queue."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     reservation_id: str  # "res_" + UUID
     tags: list[str]  # Required tags for resources

@@ -105,14 +105,17 @@ async def test_create_reservation_empty_tags():
 
 
 @pytest.mark.asyncio
-async def test_create_reservation_insufficient_total_resources(sample_resources):
-    """Test creating a reservation when total resources < quantity (still allowed)."""
-    # Only 1 Windows machine, but requesting 2
-    reservation = await create_reservation(tags=["ci", "windows"], quantity=2)
+async def test_create_reservation_insufficient_total_resources():
+    """Test that reservation is rejected when not enough compatible resources exist."""
+    from rentabot.exceptions import InvalidTTL
 
-    # Should still create the reservation (might be fulfilled later)
-    assert reservation.status == "pending"
-    assert reservation.quantity == 2
+    # Create only 1 Windows machine with specific max_lock_duration
+    resource = Resource(id=1, name="device-1", tags="ci,windows", max_lock_duration=7200)
+    resources_by_id[1] = resource
+
+    # Request 2 resources - should fail TTL validation since only 1 exists
+    with pytest.raises(InvalidTTL, match="Need 2 compatible resources, found 1"):
+        await create_reservation(tags=["ci", "windows"], quantity=2, ttl=3600)
 
 
 @pytest.mark.asyncio
@@ -395,3 +398,54 @@ async def test_timezone_aware_timestamps(sample_resources):
 
     assert reservation.created_at.tzinfo == timezone.utc
     assert reservation.expires_at.tzinfo == timezone.utc
+
+
+@pytest.mark.asyncio
+async def test_create_reservation_ttl_exceeds_max_lock_duration():
+    """Test that creating a reservation fails if TTL exceeds all matching resources' max_lock_duration."""
+    from rentabot.exceptions import InvalidTTL
+
+    # Create resources with limited max_lock_duration
+    resource1 = Resource(id=1, name="device-1", tags="gpu", max_lock_duration=3600)
+    resource2 = Resource(id=2, name="device-2", tags="gpu", max_lock_duration=3600)
+    resources_by_id[1] = resource1
+    resources_by_id[2] = resource2
+
+    # Try to create reservation with TTL exceeding max_lock_duration
+    with pytest.raises(InvalidTTL, match="exceeds max_lock_duration"):
+        await create_reservation(tags=["gpu"], quantity=1, ttl=7200)
+
+
+@pytest.mark.asyncio
+async def test_create_reservation_ttl_partial_compatibility():
+    """Test that reservation fails if not enough resources support the TTL."""
+    from rentabot.exceptions import InvalidTTL
+
+    # Create resources with different max_lock_duration values
+    resource1 = Resource(id=1, name="device-1", tags="gpu", max_lock_duration=3600)
+    resource2 = Resource(
+        id=2, name="device-2", tags="gpu", max_lock_duration=7200
+    )  # Only this one supports 7200
+    resources_by_id[1] = resource1
+    resources_by_id[2] = resource2
+
+    # Request 2 resources but only 1 can support the TTL
+    with pytest.raises(InvalidTTL, match="Need 2 compatible resources, found 1"):
+        await create_reservation(tags=["gpu"], quantity=2, ttl=7200)
+
+
+@pytest.mark.asyncio
+async def test_create_reservation_ttl_compatible():
+    """Test that reservation succeeds when enough resources support the TTL."""
+    # Create resources with sufficient max_lock_duration
+    resources = [
+        Resource(id=1, name="device-1", tags="gpu", max_lock_duration=7200),
+        Resource(id=2, name="device-2", tags="gpu", max_lock_duration=7200),
+    ]
+    for resource in resources:
+        resources_by_id[resource.id] = resource
+
+    # This should succeed
+    reservation = await create_reservation(tags=["gpu"], quantity=2, ttl=7200)
+    assert reservation.status == "pending"
+    assert reservation.ttl == 7200

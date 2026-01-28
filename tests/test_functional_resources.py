@@ -209,8 +209,6 @@ class TestLockUnlockResourceById:
             msg = "Oopsie, the resource is not locked with the expected lock token."
             pytest.fail(msg)
 
-        return lock_token
-
     def test_unlock_resource(self, app):
         """
         Title: Unlock a resource.
@@ -221,8 +219,20 @@ class TestLockUnlockResourceById:
         Then: The resource is unlocked.
         """
 
-        # Lock a resource (use lock test)
-        lock_token = self.test_lock_resource(app)
+        # Reset Database
+        reset_database()
+
+        # Add a resource to memory
+        import rentabot.models
+        from rentabot.models import resources_by_id
+
+        resource = Resource(id=1, name="resource", description="I'm a resource!")
+        resources_by_id[1] = resource
+        rentabot.models.next_resource_id = 2
+
+        # Lock the first resource
+        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        lock_token = response.json()["lock-token"]
 
         # Unlock the first resource
         response = app.post(f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}")
