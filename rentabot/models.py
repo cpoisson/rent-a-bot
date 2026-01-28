@@ -36,7 +36,7 @@ class Reservation(BaseModel):
     reservation_id: str  # "res_" + UUID
     tags: list[str]  # Required tags for resources
     quantity: int = Field(gt=0)  # Number of resources needed
-    ttl: int = 3600  # Lock TTL when claimed (seconds)
+    ttl: int = Field(default=3600, gt=0)  # Lock TTL when claimed (seconds)
 
     status: str  # "pending" | "fulfilled" | "claimed" | "expired" | "cancelled"
 
