@@ -144,6 +144,15 @@ class ReservationCannotBeCancelled(ReservationException):
         ReservationException.__init__(self, *argv, **kwargs)
 
 
+class InvalidReservationTags(ReservationException):
+    """Raised when reservation tags validation fails."""
+
+    status_code = 400  # Bad Request
+
+    def __init__(self, *argv, **kwargs):
+        ReservationException.__init__(self, *argv, **kwargs)
+
+
 # - [ Resource Descriptor Exception ] ----------------------------------------
 
 

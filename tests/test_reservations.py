@@ -17,6 +17,7 @@ from rentabot.controllers import (
 )
 from rentabot.exceptions import (
     InsufficientResources,
+    InvalidReservationTags,
     ReservationCannotBeCancelled,
     ReservationClaimExpired,
     ReservationNotFound,
@@ -91,6 +92,16 @@ async def test_create_reservation_no_matching_resources():
 
     with pytest.raises(ResourceNotFound, match="No resources match"):
         await create_reservation(tags=["windows"], quantity=1)
+
+
+@pytest.mark.asyncio
+async def test_create_reservation_empty_tags():
+    """Test that creating a reservation with empty tags raises error."""
+    resource = Resource(id=1, name="device-1", tags="ci,linux")
+    resources_by_id[1] = resource
+
+    with pytest.raises(InvalidReservationTags, match="Tags list cannot be empty"):
+        await create_reservation(tags=[], quantity=1)
 
 
 @pytest.mark.asyncio
