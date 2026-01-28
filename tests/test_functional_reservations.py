@@ -231,9 +231,8 @@ def test_create_reservation_invalid_quantity():
 
     response = client.post("/api/v1/reservations", json={"tags": ["ci", "linux"], "quantity": 0})
 
-    # Should fail validation (if we add validators)
-    # For now, just verify it doesn't crash
-    assert response.status_code in [400, 422, 201]
+    # Should fail validation - quantity must be > 0
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio
