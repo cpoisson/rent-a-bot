@@ -224,10 +224,9 @@ class TestLockUnlockResourceById:
 
         # Add a resource to memory
         import rentabot.models
-        from rentabot.models import resources_by_id
 
         resource = Resource(id=1, name="resource", description="I'm a resource!")
-        resources_by_id[1] = resource
+        rentabot.models.resources_by_id[1] = resource
         rentabot.models.next_resource_id = 2
 
         # Lock the first resource

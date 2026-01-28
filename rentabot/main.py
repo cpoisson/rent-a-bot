@@ -208,6 +208,7 @@ class ReservationResponse(BaseModel):
     status: str
     tags: list[str]
     quantity: int
+    ttl: int
     position_in_queue: Optional[int] = None
     created_at: datetime
     expires_at: datetime

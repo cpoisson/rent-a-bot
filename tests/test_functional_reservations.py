@@ -280,6 +280,7 @@ async def test_end_to_end_reservation_workflow(setup_resources):
                 }
             )
         except Exception:
+            # If locking fails, reservation remains pending (expected behavior)
             pass
 
     # 5. Verify it's fulfilled
