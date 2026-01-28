@@ -393,6 +393,7 @@ async def test_reservation_cleanup_expired_unclaimed():
                 try:
                     await unlock_resource_by_token(token)
                 except Exception:
+                    # Best-effort cleanup: ignore unlock failures (e.g., already unlocked or invalid token).
                     pass
             del reservations_by_id[res_id]
 
