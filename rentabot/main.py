@@ -393,7 +393,7 @@ async def reservation_exception_handler(request: Request, exc: ReservationExcept
     Consolidated exception handler for all ReservationException subclasses.
 
     Handles: ReservationNotFound, ReservationNotFulfilled, ReservationClaimExpired,
-             InsufficientResources, ReservationCannotBeCancelled
+             InsufficientResources, ReservationCannotBeCancelled, InvalidReservationTags
     """
     return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
 
