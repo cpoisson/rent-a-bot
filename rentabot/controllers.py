@@ -790,6 +790,20 @@ async def auto_fulfill_reservations() -> None:
                                 f"Fulfilled reservation {reservation.reservation_id} "
                                 f"with resources {[r.id for r in locked]}"
                             )
+                        else:
+                            # Reservation was cancelled or fulfilled by another process
+                            # Unlock the resources we just locked to prevent resource leak
+                            for resource in locked:
+                                try:
+                                    await unlock_resource_by_token(resource.lock_token)
+                                except ResourceNotFound:
+                                    logger.warning(
+                                        f"Resource {resource.id} not found during cleanup"
+                                    )
+                            logger.warning(
+                                f"Reservation {reservation.reservation_id} no longer pending, "
+                                "released locked resources"
+                            )
 
                 except InsufficientResources:
                     # Not enough resources yet, keep waiting
