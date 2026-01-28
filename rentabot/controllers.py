@@ -619,8 +619,8 @@ async def claim_reservation(reservation_id: str) -> Reservation:
             )
 
         if reservation.status != "fulfilled":
-            raise ReservationNotFound(
-                message=f"Reservation already {reservation.status}",
+            raise ReservationCannotBeCancelled(
+                message=f"Reservation cannot be claimed when status is '{reservation.status}'",
                 payload={"reservation_id": reservation_id, "status": reservation.status},
             )
 
