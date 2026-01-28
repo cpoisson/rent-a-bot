@@ -97,9 +97,6 @@ async def test_create_reservation_no_matching_resources():
 @pytest.mark.asyncio
 async def test_create_reservation_empty_tags():
     """Test that creating a reservation with empty tags raises error."""
-    resource = Resource(id=1, name="device-1", tags="ci,linux")
-    resources_by_id[1] = resource
-
     with pytest.raises(InvalidReservationTags, match="Tags list cannot be empty"):
         await create_reservation(tags=[], quantity=1)
 
@@ -339,6 +336,13 @@ async def test_lock_resources_by_tags_no_matching():
     # No resources with "windows" tag
     with pytest.raises(InsufficientResources):
         await lock_resources_by_tags(tags=["windows"], quantity=1)
+
+
+@pytest.mark.asyncio
+async def test_lock_resources_by_tags_empty_tags():
+    """Test that locking with empty tags raises error."""
+    with pytest.raises(InvalidReservationTags, match="Tags list cannot be empty"):
+        await lock_resources_by_tags(tags=[], quantity=1)
 
 
 @pytest.mark.asyncio

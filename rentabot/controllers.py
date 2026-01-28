@@ -414,9 +414,17 @@ async def lock_resources_by_tags(tags: list[str], quantity: int, ttl: int = 3600
         List of locked Resource objects.
 
     Raises:
+        InvalidReservationTags: If tags list is empty.
         InsufficientResources: If not enough unlocked resources match the tags.
         InvalidTTL: If TTL exceeds max_lock_duration for any resource.
     """
+    # Validate that tags is not empty
+    if not tags:
+        raise InvalidReservationTags(
+            message="Tags list cannot be empty. Resource locking must be done using a tag identifier.",
+            payload={"tags": tags},
+        )
+
     async with resource_lock:
         # Find available resources matching all tags
         all_resources = get_all_resources()
