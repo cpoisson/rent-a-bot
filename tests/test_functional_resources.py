@@ -52,7 +52,7 @@ class TestGetResources:
         create_resources(res_count_expected)
 
         # Request the available resources
-        response = app.get("/rentabot/api/v1.0/resources")
+        response = app.get("/api/v1/resources")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -80,7 +80,7 @@ class TestGetResources:
         reset_database()
 
         # Request the available resources
-        response = app.get("/rentabot/api/v1.0/resources")
+        response = app.get("/api/v1/resources")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -113,7 +113,7 @@ class TestGetResources:
         create_resources(10)
 
         # Request an existing resource
-        response = app.get("/rentabot/api/v1.0/resources/5")
+        response = app.get("/api/v1/resources/5")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -140,7 +140,7 @@ class TestGetResources:
         create_resources(10)
 
         # Request a obviously unkown resource
-        response = app.get("/rentabot/api/v1.0/resources/1000")
+        response = app.get("/api/v1/resources/1000")
 
         # Should be a 404 Not Found
         if response.status_code != 404:
@@ -181,7 +181,7 @@ class TestLockUnlockResourceById:
         rentabot.models.next_resource_id = 2
 
         # Lock the first resource
-        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        response = app.post("/api/v1/resources/1/lock")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -201,7 +201,7 @@ class TestLockUnlockResourceById:
                 pytest.fail(msg)
 
         # Resource should be locked with this token
-        response = app.get("/rentabot/api/v1.0/resources/1")
+        response = app.get("/api/v1/resources/1")
 
         resource = response.json()["resource"]
 
@@ -230,11 +230,11 @@ class TestLockUnlockResourceById:
         rentabot.models.next_resource_id = 2
 
         # Lock the first resource
-        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        response = app.post("/api/v1/resources/1/lock")
         lock_token = response.json()["lock-token"]
 
         # Unlock the first resource
-        response = app.post(f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}")
+        response = app.post(f"/api/v1/resources/1/unlock?lock-token={lock_token}")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -242,7 +242,7 @@ class TestLockUnlockResourceById:
             pytest.fail(msg)
 
         # Resource should be unlocked
-        response = app.get("/rentabot/api/v1.0/resources/1")
+        response = app.get("/api/v1/resources/1")
 
         resource = response.json()["resource"]
 
@@ -267,7 +267,7 @@ class TestLockUnlockResourceById:
         lock_token = "verybadlocktokenbadbadbad"
 
         # Unlock the first resource
-        response = app.post(f"/rentabot/api/v1.0/resources/1/unlock?lock-token={lock_token}")
+        response = app.post(f"/api/v1/resources/1/unlock?lock-token={lock_token}")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -275,7 +275,7 @@ class TestLockUnlockResourceById:
             pytest.fail(msg)
 
         # Resource should be still locked
-        response = app.get("/rentabot/api/v1.0/resources/1")
+        response = app.get("/api/v1/resources/1")
 
         resource = response.json()["resource"]
 
@@ -296,7 +296,7 @@ class TestLockUnlockResourceById:
         self.test_lock_resource(app)
 
         # Lock the resource again
-        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        response = app.post("/api/v1/resources/1/lock")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -325,7 +325,7 @@ class TestLockUnlockResourceById:
         rentabot.models.next_resource_id = 2
 
         # Unlock the first resource
-        response = app.post("/rentabot/api/v1.0/resources/1/unlock")
+        response = app.post("/api/v1/resources/1/unlock")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -355,7 +355,7 @@ class TestLockUnlockResourceById:
 
         # Unlock an arbitrary resource 1000000, far away
         resource_id = 100000
-        response = app.post(f"/rentabot/api/v1.0/resources/{resource_id}/{cmd}")
+        response = app.post(f"/api/v1/resources/{resource_id}/{cmd}")
 
         # Response should be a 404 Not Found
         if response.status_code != 404:
@@ -394,7 +394,7 @@ class TestLockResourceByCriteria:
         # Lock an arduino with leds
         tag_1 = "arduino"
         tag_2 = "leds"
-        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag_1}&tag={tag_2}")
+        response = app.post(f"/api/v1/resources/lock?tag={tag_1}&tag={tag_2}")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -424,7 +424,7 @@ class TestLockResourceByCriteria:
 
         # Retry to lock the same tags (only one is available here)
 
-        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag_1}&tag={tag_2}")
+        response = app.post(f"/api/v1/resources/lock?tag={tag_1}&tag={tag_2}")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -448,7 +448,7 @@ class TestLockResourceByCriteria:
         # Lock an arduino with leds
         tag_1 = "arduino"
         tag_2 = "acapulco"
-        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag_1}&tag={tag_2}")
+        response = app.post(f"/api/v1/resources/lock?tag={tag_1}&tag={tag_2}")
 
         # Should be a 404
         if response.status_code != 404:
@@ -474,7 +474,7 @@ class TestLockResourceByCriteria:
         tag = "multipurpose"
 
         # Lock first multipurpose resource
-        response1 = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+        response1 = app.post(f"/api/v1/resources/lock?tag={tag}")
         if response1.status_code != 200:
             msg = (
                 f"First lock failed: status code 200 was awaited, received {response1.status_code}."
@@ -482,13 +482,13 @@ class TestLockResourceByCriteria:
             pytest.fail(msg)
 
         # Lock second multipurpose resource
-        response2 = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+        response2 = app.post(f"/api/v1/resources/lock?tag={tag}")
         if response2.status_code != 200:
             msg = f"Second lock failed: status code 200 was awaited, received {response2.status_code}."
             pytest.fail(msg)
 
         # Try to lock another multipurpose resource (all are now locked)
-        response3 = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+        response3 = app.post(f"/api/v1/resources/lock?tag={tag}")
 
         # Should be a 403 Forbidden
         if response3.status_code != 403:
@@ -524,7 +524,7 @@ class TestLockResourceByCriteria:
 
         # Lock a resource with arduino tag (should not select the one without tags)
         tag = "arduino"
-        response = app.post(f"/rentabot/api/v1.0/resources/lock?tag={tag}")
+        response = app.post(f"/api/v1/resources/lock?tag={tag}")
 
         # Should be a 200 OK
         if response.status_code != 200:
@@ -551,7 +551,7 @@ class TestLockResourceByCriteria:
         create_resources_with_tags()
 
         # Lock using a not supported criteria
-        response = app.post("/rentabot/api/v1.0/resources/lock?color=blue")
+        response = app.post("/api/v1/resources/lock?color=blue")
 
         # Should be a 400
         if response.status_code != 400:
@@ -590,7 +590,7 @@ class TestExtendResourceLock:
         rentabot.models.next_resource_id = 2
 
         # Lock the resource
-        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        response = app.post("/api/v1/resources/1/lock")
         if response.status_code != 200:
             msg = f"Oopsie, lock failed with status code {response.status_code}."
             pytest.fail(msg)
@@ -600,7 +600,7 @@ class TestExtendResourceLock:
         # Extend the lock
         additional_ttl = 600
         response = app.post(
-            f"/rentabot/api/v1.0/resources/1/extend?lock-token={lock_token}&additional-ttl={additional_ttl}"
+            f"/api/v1/resources/1/extend?lock-token={lock_token}&additional-ttl={additional_ttl}"
         )
 
         # Should be a 200 OK
@@ -688,7 +688,7 @@ class TestExtendResourceLock:
         rentabot.models.next_resource_id = 2
 
         # Lock the resource
-        response = app.post("/rentabot/api/v1.0/resources/1/lock")
+        response = app.post("/api/v1/resources/1/lock")
         if response.status_code != 200:
             msg = f"Oopsie, lock failed with status code {response.status_code}."
             pytest.fail(msg)
@@ -696,7 +696,7 @@ class TestExtendResourceLock:
         # Try to extend with invalid token
         invalid_token = "verybadtokenbadbadbad"
         response = app.post(
-            f"/rentabot/api/v1.0/resources/1/extend?lock-token={invalid_token}&additional-ttl=600"
+            f"/api/v1/resources/1/extend?lock-token={invalid_token}&additional-ttl=600"
         )
 
         # Should be a 403 Forbidden
@@ -726,9 +726,7 @@ class TestExtendResourceLock:
         rentabot.models.next_resource_id = 2
 
         # Try to extend without locking first
-        response = app.post(
-            "/rentabot/api/v1.0/resources/1/extend?lock-token=anytoken&additional-ttl=600"
-        )
+        response = app.post("/api/v1/resources/1/extend?lock-token=anytoken&additional-ttl=600")
 
         # Should be a 403 Forbidden
         if response.status_code != 403:
@@ -757,7 +755,7 @@ class TestExtendResourceLock:
         # Try to extend a non-existent resource
         resource_id = 100000
         response = app.post(
-            f"/rentabot/api/v1.0/resources/{resource_id}/extend?lock-token=anytoken&additional-ttl=600"
+            f"/api/v1/resources/{resource_id}/extend?lock-token=anytoken&additional-ttl=600"
         )
 
         # Should be a 404 Not Found
@@ -791,7 +789,7 @@ class TestExtendResourceLock:
         rentabot.models.next_resource_id = 2
 
         # Lock the resource with initial TTL
-        response = app.post("/rentabot/api/v1.0/resources/1/lock?ttl=3600")  # 1 hour
+        response = app.post("/api/v1/resources/1/lock?ttl=3600")  # 1 hour
         if response.status_code != 200:
             msg = f"Oopsie, lock failed with status code {response.status_code}."
             pytest.fail(msg)
@@ -801,7 +799,7 @@ class TestExtendResourceLock:
         # Try to extend by excessive amount (total would exceed max_lock_duration)
         excessive_ttl = 10000  # Would result in total > 7200
         response = app.post(
-            f"/rentabot/api/v1.0/resources/1/extend?lock-token={lock_token}&additional-ttl={excessive_ttl}"
+            f"/api/v1/resources/1/extend?lock-token={lock_token}&additional-ttl={excessive_ttl}"
         )
 
         # Should be a 400 Bad Request

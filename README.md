@@ -217,9 +217,6 @@ curl -X POST -i "http://localhost:8000/api/v1/resources/6/unlock?lock-token={res
 
 **Note:** If the resource is already unlocked or the lock-token is not valid, an error code is returned.
 
-#### Legacy endpoints
-For compatibility, legacy endpoints under `/rentabot/api/v1.0/...` are still available. Please migrate clients to `/api/v1/...` as legacy support will be removed in the next major release.
-
 
 ## How to test
 

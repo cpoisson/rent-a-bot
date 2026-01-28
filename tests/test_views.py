@@ -27,7 +27,7 @@ def test_startup_without_resource_descriptor():
         from rentabot.main import app
 
         client = TestClient(app)
-        response = client.get("/rentabot/api/v1.0/resources")
+        response = client.get("/api/v1/resources")
 
         # Should start successfully and return empty resources
         assert response.status_code == 200
