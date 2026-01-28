@@ -701,72 +701,104 @@ async def auto_fulfill_reservations() -> None:
             await asyncio.sleep(10)  # Check every 10 seconds
             now = datetime.now(timezone.utc)
 
+            # Take snapshot of reservations to avoid holding lock during operations
             async with reservation_lock:
-                # 1. Clean up expired pending reservations
-                for res_id, reservation in list(reservations_by_id.items()):
-                    if reservation.status == "pending" and reservation.expires_at <= now:
+                reservations_snapshot = list(reservations_by_id.items())
+
+            # 1. Clean up expired pending reservations
+            expired_pending = []
+            for res_id, reservation in reservations_snapshot:
+                if reservation.status == "pending" and reservation.expires_at <= now:
+                    expired_pending.append((res_id, reservation))
+
+            for res_id, reservation in expired_pending:
+                async with reservation_lock:
+                    # Re-check in case it was fulfilled during iteration
+                    current = reservations_by_id.get(res_id)
+                    if current and current.status == "pending" and current.expires_at <= now:
                         del reservations_by_id[res_id]
                         logger.info(
                             f"Expired pending reservation {res_id} (waited {(now - reservation.created_at).total_seconds()}s)"
                         )
 
-                    # 2. Clean up expired unclaimed fulfilled reservations
-                    elif (
-                        reservation.status == "fulfilled"
-                        and reservation.claim_expires_at
-                        and reservation.claim_expires_at <= now
-                    ):
-                        # Unlock the resources
-                        for token in reservation.lock_tokens:
-                            try:
-                                await unlock_resource_by_token(token)
-                            except ResourceNotFound:
-                                logger.warning(
-                                    f"Resource with token {token} not found during reservation cleanup"
-                                )
+            # 2. Clean up expired unclaimed fulfilled reservations
+            expired_fulfilled = []
+            for res_id, reservation in reservations_snapshot:
+                if (
+                    reservation.status == "fulfilled"
+                    and reservation.claim_expires_at
+                    and reservation.claim_expires_at <= now
+                ):
+                    expired_fulfilled.append((res_id, reservation))
 
+            for res_id, reservation in expired_fulfilled:
+                # Unlock the resources (this acquires resource_lock internally)
+                for token in reservation.lock_tokens:
+                    try:
+                        await unlock_resource_by_token(token)
+                    except ResourceNotFound:
+                        logger.warning(
+                            f"Resource with token {token} not found during reservation cleanup"
+                        )
+
+                # Remove reservation after unlocking resources
+                async with reservation_lock:
+                    # Re-check in case it was claimed during iteration
+                    current = reservations_by_id.get(res_id)
+                    if (
+                        current
+                        and current.status == "fulfilled"
+                        and current.claim_expires_at
+                        and current.claim_expires_at <= now
+                    ):
                         del reservations_by_id[res_id]
                         logger.info(f"Expired unclaimed reservation {res_id}")
 
-                # 3. Try to fulfill pending reservations (FIFO)
+            # 3. Try to fulfill pending reservations (FIFO)
+            pending = []
+            async with reservation_lock:
                 pending = [r for r in reservations_by_id.values() if r.status == "pending"]
                 pending.sort(key=lambda r: r.created_at)  # FIFO
 
-                for reservation in pending:
-                    try:
-                        # Try to lock resources matching tags
-                        locked = await lock_resources_by_tags(
-                            tags=reservation.tags,
-                            quantity=reservation.quantity,
-                            ttl=reservation.ttl,
-                        )
+            for reservation in pending:
+                try:
+                    # Try to lock resources matching tags (this acquires resource_lock internally)
+                    locked = await lock_resources_by_tags(
+                        tags=reservation.tags,
+                        quantity=reservation.quantity,
+                        ttl=reservation.ttl,
+                    )
 
-                        # Success! Mark as fulfilled
-                        fulfilled_at = datetime.now(timezone.utc)
-                        updated = reservation.model_copy(
-                            update={
-                                "status": "fulfilled",
-                                "fulfilled_at": fulfilled_at,
-                                "claim_expires_at": fulfilled_at + timedelta(seconds=60),
-                                "resource_ids": [r.id for r in locked],
-                                "lock_tokens": [r.lock_token for r in locked],
-                            }
-                        )
-                        reservations_by_id[reservation.reservation_id] = updated
+                    # Success! Mark as fulfilled
+                    fulfilled_at = datetime.now(timezone.utc)
+                    async with reservation_lock:
+                        # Re-check reservation still exists and is pending
+                        current = reservations_by_id.get(reservation.reservation_id)
+                        if current and current.status == "pending":
+                            updated = current.model_copy(
+                                update={
+                                    "status": "fulfilled",
+                                    "fulfilled_at": fulfilled_at,
+                                    "claim_expires_at": fulfilled_at + timedelta(seconds=60),
+                                    "resource_ids": [r.id for r in locked],
+                                    "lock_tokens": [r.lock_token for r in locked],
+                                }
+                            )
+                            reservations_by_id[reservation.reservation_id] = updated
 
-                        logger.info(
-                            f"Fulfilled reservation {reservation.reservation_id} "
-                            f"with resources {[r.id for r in locked]}"
-                        )
+                            logger.info(
+                                f"Fulfilled reservation {reservation.reservation_id} "
+                                f"with resources {[r.id for r in locked]}"
+                            )
 
-                    except InsufficientResources:
-                        # Not enough resources yet, keep waiting
-                        continue
-                    except Exception as e:
-                        logger.error(
-                            f"Error fulfilling reservation {reservation.reservation_id}: {e}",
-                            exc_info=True,
-                        )
+                except InsufficientResources:
+                    # Not enough resources yet, keep waiting
+                    continue
+                except Exception as e:
+                    logger.error(
+                        f"Error fulfilling reservation {reservation.reservation_id}: {e}",
+                        exc_info=True,
+                    )
 
         except Exception as e:
             logger.error(f"Error in auto_fulfill_reservations task: {e}", exc_info=True)
