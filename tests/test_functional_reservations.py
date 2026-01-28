@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi.testclient import TestClient
 
+from rentabot.exceptions import InsufficientResources
 from rentabot.main import app
 from rentabot.models import reservations_by_id, resources_by_id
 
@@ -279,8 +280,8 @@ async def test_end_to_end_reservation_workflow(setup_resources):
                     "lock_tokens": [r.lock_token for r in locked_for_res],
                 }
             )
-        except Exception:
-            # If locking fails, reservation remains pending (expected behavior)
+        except InsufficientResources:
+            # If insufficient resources, reservation remains pending (expected behavior)
             pass
 
     # 5. Verify it's fulfilled
