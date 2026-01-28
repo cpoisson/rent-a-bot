@@ -14,6 +14,7 @@ import yaml
 from rentabot.exceptions import (
     InsufficientResources,
     InvalidLockToken,
+    InvalidReservationTags,
     InvalidTTL,
     ReservationCannotBeCancelled,
     ReservationClaimExpired,
@@ -492,8 +493,16 @@ async def create_reservation(
         Created Reservation object.
 
     Raises:
+        InvalidReservationTags: If tags list is empty.
         ResourceNotFound: If no resources match the tags.
     """
+    # Validate that tags is not empty
+    if not tags:
+        raise InvalidReservationTags(
+            message="Tags list cannot be empty. Reservation must be done using a tag identifier.",
+            payload={"tags": tags},
+        )
+
     # Validate that at least some resources match the tags
     all_resources = get_all_resources()
     matching_count = 0
