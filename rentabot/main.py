@@ -197,7 +197,7 @@ class ExtendResponse(BaseModel):
 
 # Reservation models
 class CreateReservationRequest(BaseModel):
-    tags: list[str]
+    tags: list[str] = Field(..., min_length=1)
     quantity: int = Field(gt=0)
     max_wait_time: Optional[int] = Field(default=3600, gt=0)
     ttl: Optional[int] = Field(default=3600, gt=0)
