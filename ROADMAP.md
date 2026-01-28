@@ -1,519 +1,281 @@
-# Development Roadmap to v1.0
+# Development Roadmap - Post v1.0.0
 
-## Vision
+## High-Level Goals
 
-Rent-A-Bot aims to be a lightweight, platform-agnostic alternative to Jenkins Lockable Resources, LAVA, Testflinger, and GitLab Resource Groups. As a standalone service with no current users, this roadmap embraces breaking changes to establish a solid v1.0 foundation prioritizing production readiness, simplicity, and cross-platform compatibility.
+**rentabot** is a resource locking service designed to coordinate shared resource access across CI/CD pipelines and automated systems. The v1.0.0 release established the core foundation. Future development focuses on three key pillars:
 
-## Priority Features
+1. **Operational Visibility**: Enhanced tracking, monitoring, and observability for production deployments
+2. **User Experience**: Improved web UI with real-time updates and better resource management controls
+3. **Production Readiness**: Authentication, persistence, and enterprise-grade reliability features
 
-1. **Lock Timeout/TTL** - Automatic recovery from dead locks
-2. **Smart Reservation Queue** - Wait-and-acquire pattern with priority support
-3. **N-of-M Resource Allocation** - Request multiple resources matching criteria
-4. **Standardized Tag Handling** - Comma-separated tags for consistency
-5. **Basic Authentication** - API key-based access control
-6. **Optional Persistence** - SQLite backend for production deployments
+The roadmap prioritizes practical features that solve real-world coordination challenges in automated environments.
 
 ---
 
-## Phase 1 - Breaking Changes & Foundation (v0.4.0) ✅ COMPLETED
+## What's Complete (v1.0.0 - January 2026)
 
-**Target:** Early Q1 2026 | **Completed:** January 2026
+✅ **Core Resource Management**
+- Lock/unlock with TTL and automatic expiration
+- Multi-resource atomic locking via reservations
+- FIFO reservation queue with 60s claim window
+- Health check endpoints (`/health`, `/readiness`)
+- Comma-separated tag format
+- Simplified `/api/v1/` API paths
 
-### Breaking Changes
-- ✅ **Tag Separator Migration**: Change from space-separated (`"ci linux x86"`) to comma-separated (`"ci,linux,x86"`)
-  - Update `Resource.tags` parsing in `controllers.py`
-  - Maintain backward-compatible parser during transition
-  - Update example resource descriptor files
+## What's Next
 
-- ✅ **API Path Simplification**: Shorten from `/rentabot/api/v1.0/` to `/api/v1/`
-  - More concise and industry-standard
-  - Update all endpoint definitions in `main.py`
-  - Add redirect from old paths for migration period
-
-### Foundation Improvements
-- ✅ Fix Python version requirement to `>=3.10` in `pyproject.toml`
-- ✅ Add `/health` endpoint for monitoring (200 OK if service running)
-- ✅ Add `/readiness` endpoint for Kubernetes health checks
-- ✅ Consolidate exception handlers following DRY principles
-- ✅ Replace custom `model_dump_json()` with Pydantic's `model_dump()`
-
-### Documentation
-- ✅ Create migration guide for descriptor format changes
-- ✅ Update README with new API paths
-- ✅ Add examples for comma-separated tags
-
-**Success Criteria:**
-- ✅ All tests pass with new tag format
-- ✅ API documentation reflects simplified paths
-- ✅ Health endpoints return appropriate status codes
+The following features are planned for upcoming releases. This roadmap focuses on production readiness and operational improvements.
 
 ---
 
-## Phase 2 - N-of-M Resource Allocation (v0.5.0) 🟡 IN PROGRESS
+## v1.1.0 - Lock Tracking & Frontend Improvements
 
-**Target:** Mid Q1 2026 | **Status:** Core features completed via reservations
+**Target:** February 2026
 
-### Core Features
-- ✅ **Multi-Resource Lock Endpoint**: Implemented via reservations (see Phase 4)
-  - Atomic multi-resource locking with automatic rollback
-  - Transaction-style all-or-nothing allocation
-  - Note: Direct `POST /api/v1/resources/lock` with quantity parameter not yet implemented
-
-- ❌ **Batch Unlock Endpoint**: `POST /api/v1/resources/unlock-batch`
-  ```json
-  {
-    "lock_tokens": ["uuid1", "uuid2"]
-  }
+### Lock Tracking & Metadata
+- **"Locked By" Information**:
+  ```python
+  class Resource(BaseModel):
+      # ... existing fields ...
+      locked_by_label: str | None = None  # e.g., "jenkins-job-123", "user@example.com"
+      locked_by_ip: str | None = None     # IP address of lock requester
   ```
-  - Status: Not yet implemented (can unlock individually)
+  - Track who/what locked the resource (human-readable label)
+  - Record IP address of lock operation
+  - Display in API responses and web UI
+  - Clear on unlock
 
-### Implementation Details
-- ❌ Extend `lock_resource()` to support quantity parameter (not on direct lock endpoint yet)
-- ✅ Implement atomic multi-resource locking using existing `resource_lock` (via reservations)
-- ✅ Add validation to ensure sufficient available resources before locking
-- ❌ Update web UI to show resource groups and multi-locks
+### Frontend Enhancements
+- **Auto-Refresh**:
+  - Automatic page refresh every 10-30 seconds
+  - Optional: WebSocket for real-time updates
+  - Visual indicator showing last refresh time
 
-### API Changes
-- ❌ Add `quantity` parameter to existing lock endpoints (default: 1)
-- ✅ Maintain backward compatibility with single-resource locks
-- ✅ Enhance error messages for insufficient resources
+- **TTL Display**:
+  - Show remaining lock time for each locked resource
+  - Countdown timer (e.g., "15:30 remaining")
+  - Warning indicator when < 5 minutes remain
+  - Color coding: green > 15min, yellow 5-15min, red < 5min
 
-**Success Criteria:**
-- ✅ Can successfully lock/unlock N resources in single operation (via reservations)
-- ✅ Partial failures result in complete rollback
-- ❌ Web UI displays grouped resource allocations
-- ✅ Test coverage includes edge cases (insufficient resources, partial availability)
+- **Reservation Queue Display**:
+  - New section showing active reservations
+  - Columns: ID, Tags, Quantity, Status, Position, Created
+  - Real-time status updates (pending → fulfilled → claimed)
+
+- **Improved Status Labels**:
+  - Current: "Resource is available", "Resource is locked"
+  - New: Single-word status badges
+    - `Available` (green)
+    - `Locked` (red)
+    - `Unavailable` (gray)
+    - `Reserved` (yellow)
+
+- **Table Sorting & Filtering**:
+  - Sortable columns (name, status, tags, lock time)
+  - Filter by status: All / Available / Locked / Unavailable
+  - Filter by tags
+  - Search by name or description
+
+### Admin Controls (Frontend)
+- **Resource Management Buttons**:
+  - "Mark Unavailable" button for admins
+  - Modal dialog for unavailability reason
+  - Optional scheduled re-enablement time
+  - "Mark Available" button to re-enable
+  - Requires admin authentication
+
+**API Changes:**
+- Add `locked_by_label` and `locked_by_ip` to lock endpoint requests
+- Capture IP from `request.client.host` in FastAPI
+
+**API Changes:**
+- Add `locked_by_label` and `locked_by_ip` to lock endpoint requests
+- Capture IP from `request.client.host` in FastAPI
 
 ---
 
-## Phase 3 - Lock Timeout & Auto-Expiration (v0.6.0) 🟡 IN PROGRESS
+## v1.2.0 - Resource Maintenance & Unavailability
 
-**Target:** Late Q1 2026 | **Status:** Core TTL features completed
+**Target:** March 2026
 
-### Data Model Extensions ✅ COMPLETED
-```python
-class Resource(BaseModel):
-    # ... existing fields ...
-    lock_acquired_at: datetime | None = None
-    lock_expires_at: datetime | None = None
-    max_lock_duration: int = 3600  # seconds, configurable per-resource
+### Mark Resources Unavailable
+- **Data Model**:
+  ```python
+  class Resource(BaseModel):
+      # ... existing fields ...
+      unavailable: bool = False
+      unavailable_reason: str | None = None
+      unavailable_since: datetime | None = None
+      unavailable_until: datetime | None = None  # Optional scheduled end
+  ```
+
+- **API Endpoints**:
+  - `POST /api/v1/resources/{id}/unavailable` - Mark unavailable (admin only)
+  - `POST /api/v1/resources/{id}/available` - Re-enable (admin only)
+  - `GET /api/v1/resources?available=true` - Filter available only
+
+- **Behavior**:
+  - Prevents new locks (409 Conflict)
+  - Excluded from reservation matching
+  - Existing locks expire normally
+  - Optional auto re-enablement at `unavailable_until`
+
+- **Frontend**:
+  - Visual indicator (grayed out, "Unavailable" badge)
+  - Display reason in tooltip
+  - Admin controls integrated
+
+**Use Cases:** Hardware maintenance, network upgrades, failures, decommissioning
+
+---
+
+## v1.3.0 - Simplified Authentication
+
+**Target:** April 2026
+
+### Two-Role Authentication Model
+
+**Simplified Approach** (to be discussed):
+- **Admin Token**: Defined in configuration file
+  - Full access to all operations
+  - Can mark resources unavailable
+  - Can force unlock resources
+  - Overrides all other tokens
+
+- **User Tokens**: Regular API access
+  - Can lock/unlock/reserve resources
+  - Cannot modify resource state (unavailable)
+  - Cannot force unlock others' locks
+
+### Configuration
+```yaml
+# auth-config.yaml
+auth:
+  admin_token: "admin-secret-token-xyz"  # Single admin token
+  enabled: true  # Set to false to disable auth (default: false)
+
+# Optional: user tokens for access control
+user_tokens:
+  - "user-token-abc-jenkins"
+  - "user-token-def-github"
 ```
 
-### Core Features
-- ✅ **TTL Support on Lock Requests**: Optional `ttl` parameter (seconds)
-  - Configurable default (3600s)
-  - Per-resource max TTL limit
-  - Validates requested TTL against max allowed
+### Implementation
+- Simple token check via `X-API-Key` header
+- Admin token has full privileges
+- User tokens have standard access
+- No auth = open access (with warning log)
+- Token validation middleware in FastAPI
 
-- ✅ **Automatic Expiration**: Background asyncio task
-  - Runs every 10 seconds
-  - Scans all locked resources for expired locks
-  - Auto-unlocks with details: `"Auto-expired at {timestamp}"`
-  - Logs expiration events for audit trail
+### Lock Tracking Integration
+- Record token name/type in lock metadata
+- Track which token locked which resource
+- Audit log: token, IP address, operation, timestamp
 
-- ✅ **Lock Extension**: `POST /api/v1/resources/{id}/extend`
-  - Extend lock duration before expiration
-  - Validates extension against max duration
+**Note:** Role-based complexity (maintainer, readonly) deferred. Focus on simple admin/user split.
 
-- ❌ **Monitoring Endpoints**:
-  - `GET /api/v1/resources/expired` - List recently expired locks (not implemented)
-  - ✅ Include expiration time in resource detail responses
-  - ❌ Add warning period (5 min before expiration)
-
-### Implementation Details
-- ✅ Background task starts with FastAPI lifespan event
-- ✅ Graceful handling of timezone-aware datetimes
-- ❌ Update web UI to show:
-  - ❌ Time remaining for locked resources
-  - ❌ Warning indicator when < 5 minutes remain
-  - ❌ Auto-refresh every 10 seconds
-
-**Success Criteria:**
-- ✅ Locks automatically expire after TTL
-- ✅ Background task doesn't block main event loop
-- ❌ Web UI shows countdown timer
-- ✅ Expired locks are logged with timestamp and original requester
+**Note:** Role-based complexity (maintainer, readonly) deferred. Focus on simple admin/user split.
 
 ---
 
-## Phase 4 - Smart Reservation Queue (v0.7.0) 🟡 IN PROGRESS
+## v1.4.0 - Persistence & State Recovery
 
-**Target:** Early Q2 2026 | **Status:** FIFO queue completed, priority/WebSocket pending
+**Target:** May 2026
 
-### Data Model ✅ COMPLETED (FIFO only)
-```python
-class Reservation(BaseModel):
-    id: str  # UUID
-    tags: list[str]
-    quantity: int
-    # priority: int = 5  # NOT YET IMPLEMENTED - currently pure FIFO
-    client_id: str
-    created_at: datetime
-    expires_at: datetime  # reservation itself expires
-    status: str  # "pending", "fulfilled", "cancelled", "expired", "claimed"
-    ttl: int  # lock TTL when fulfilled
-```
+### SQLite Backend (Optional)
+- **Configuration**: `--persist sqlite:///path/to/rentabot.db`
+- **Tables**: resources, locks, reservations, audit_log
+- **Default**: In-memory (current behavior)
+- **State Recovery**: Reload resources, restore active locks on startup
+- **Migrations**: Using Alembic for schema management
 
-### Core Features
-- ✅ **Create Reservation**: `POST /api/v1/reservations`
-  ```json
-  {
-    "tags": ["ci", "linux"],
-    "quantity": 2,
-    "ttl": 3600,
-    "client_id": "jenkins-build-123"
-  }
-  ```
-  - Returns reservation ID for tracking
-  - Queues if resources not immediately available
-  - Note: `priority` parameter not yet supported
-
-- ❌ **Real-Time Notifications**: Not yet implemented
-  - WebSocket endpoint: `GET /ws/reservations/{reservation_id}` (planned)
-  - Would send message when resources allocated
-  - Client must poll status endpoint currently
-
-- ✅ **Queue Management**:
-  - ✅ `GET /api/v1/reservations` - List all reservations
-  - ✅ `GET /api/v1/reservations/{id}` - Check reservation status
-  - ✅ `DELETE /api/v1/reservations/{id}` - Cancel reservation
-  - ✅ `POST /api/v1/reservations/{id}/claim` - Claim fulfilled reservation
-
-### Implementation Details
-- ✅ **Auto-Fulfillment Task**: Background process
-  - Runs every 10 seconds
-  - Matches freed resources to pending reservations
-  - ✅ Currently: strict FIFO by created_at
-  - ❌ Priority sorting not yet implemented
-  - Reserves resources for 60 seconds for claiming
-  - Atomic multi-resource locking with rollback
-
-- ❌ **Queue Strategy**: Priority + FIFO (matches LAVA/Slurm model)
-  - ❌ Priority 1-10 (1 = highest) - not implemented
-  - ✅ Currently: pure FIFO queue
-  - ❌ Aging mechanism not implemented
-
-- ✅ **Reservation Cleanup**:
-  - Unclaimed fulfilled reservations expire after 60s
-  - Background task removes expired/cancelled reservations
-  - Atomic cleanup prevents race conditions
-
-**Success Criteria:**
-- ✅ Reservations automatically fulfilled when resources available
-- ❌ WebSocket notifies clients in real-time (polling required currently)
-- ❌ Higher priority reservations served first (no priority support yet)
-- ✅ Reservations served FIFO (strict order by created_at)
-- ✅ Abandoned reservations cleaned up automatically
+### Features
+- Import/export YAML ↔ SQLite
+- Backup/restore commands
+- Lock validation on recovery (check TTL expiration)
+- Resume pending reservations
 
 ---
 
-## Phase 5 - Resource Maintenance & Unavailability (v0.5.0)
+## v1.5.0 - Monitoring & Metrics
 
-**Target:** Q1 2026
+**Target:** June 2026
 
-### Data Model Extensions
-```python
-class Resource(BaseModel):
-    # ... existing fields ...
-    unavailable: bool = False
-    unavailable_reason: str | None = None  # e.g., "Hardware maintenance", "Network upgrade"
-    unavailable_since: datetime | None = None
-    unavailable_until: datetime | None = None  # Optional scheduled end time
-```
-
-### Core Features
-- **Mark Resource Unavailable**: `POST /api/v1/resources/{id}/unavailable`
-  ```json
-  {
-    "reason": "Hardware maintenance - replacing disk",
-    "until": "2026-02-01T14:00:00Z"  // optional
-  }
-  ```
-  - Requires maintainer/admin role (when auth implemented)
-  - Prevents new locks and reservations
-  - Does NOT unlock currently held locks (those expire normally)
-  - Optional scheduled end time for automatic re-enablement
-
-- **Mark Resource Available**: `POST /api/v1/resources/{id}/available`
-  - Clears unavailable flag and reason
-  - Resource becomes available for locking/reservations
-
-- **Filter Unavailable Resources**:
-  - `GET /api/v1/resources?available=true` - Show only available resources
-  - `GET /api/v1/resources?unavailable=true` - Show only unavailable resources
-  - Default behavior: show all resources with `unavailable` field
-
-### Implementation Details
-- ✅ Validation in lock endpoints: reject locks on unavailable resources
-- ✅ Reservation matching: skip unavailable resources when fulfilling
-- ❌ Background task: auto re-enable resources when `unavailable_until` passes
-- ❌ Web UI: visual indicator for unavailable resources (gray out, badge)
-- ✅ API response: include unavailability info in resource details
-
-### Integration Points
-- **With Locks**: Unavailable resources cannot be locked (409 Conflict)
-- **With Reservations**: Unavailable resources excluded from matching pool
-- **With Expiration**: Existing locks expire normally, resource stays unavailable
-- **With Authentication** (Phase 6): Only admins/maintainers can toggle unavailability
-
-### Use Cases
-- CI infrastructure maintenance windows
-- Hardware failures requiring repair
-- Network upgrades or reconfiguration
-- Resource decommissioning before removal
-- Testing/debugging specific resources
-
-**Success Criteria:**
-- ❌ Resources can be marked unavailable with reason
-- ❌ Unavailable resources rejected from lock operations
-- ❌ Reservations skip unavailable resources
-- ❌ Scheduled maintenance windows supported
-- ❌ Web UI shows maintenance status clearly
-
----
-
-## Phase 6 - Authentication & Audit Logging (v0.8.0)
-
-**Target:** Mid Q2 2026
-
-### Authentication
-- **API Key Authentication**: Via `X-API-Key` header
-  ```yaml
-  # auth-config.yaml
-  api_keys:
-    - key: "abc123..."
-      name: "Jenkins Production"
-      role: "user"
-    - key: "xyz789..."
-      name: "Admin Console"
-      role: "admin"
-  ```
-
-- **Role-Based Access Control**:
-  - `admin` role: Full access (CRUD resources, view audit logs)
-  - `user` role: Lock/unlock/reserve only (no resource creation)
-  - `readonly` role: View-only access
-
-- **JWT Support** (Optional): For advanced deployments
-  - Token-based authentication
-  - Configurable expiration
-  - Claims-based authorization
-
-### Audit Logging
-```python
-class AuditLog(BaseModel):
-    timestamp: datetime
-    event_type: str  # "lock", "unlock", "reserve", etc.
-    resource_id: int | None
-    client_id: str
-    api_key_name: str
-    success: bool
-    details: dict
-```
-
-- Structured logging to separate file: `audit.jsonl`
-- Queryable via API: `GET /api/v1/audit?from=...&to=...`
-- Includes all resource state changes
-- IP address and user agent tracking
-
-### Implementation Details
-- Add `--auth-config` flag to CLI
-- Authentication middleware in FastAPI
-- Graceful degradation (no auth = open access with warning)
-- Rate limiting per API key (optional)
-
-**Success Criteria:**
-- Unauthorized requests return 401
-- Role-based permissions enforced
-- All operations logged with full context
-- Audit logs include client identification
-
----
-
-## Phase 7 - Persistence, Metrics & v1.0 Polish (v0.9.0 → v1.0.0)
-
-**Target:** Late Q2 2026
-
-### Persistence
-- **SQLite Backend**: Optional via `--persist sqlite:///path/to/db.sqlite`
-  - Tables: resources, locks, reservations, audit_log
-  - Migrations using Alembic
-  - Maintains in-memory as default (backward compatible)
-
-- **State Recovery**: On startup
-  - Reload resources from database
-  - Restore active locks (with TTL validation)
-  - Resume pending reservations
-
-- **Migration Utilities**:
-  - Import from YAML descriptor to database
-  - Export database to YAML
-  - Backup/restore commands
-
-### Metrics
-- **Prometheus Endpoint**: `GET /metrics`
-  ```
-  # Lock duration histogram
-  rentabot_lock_duration_seconds_bucket{le="60"} 150
-
-  # Active locks gauge
-  rentabot_active_locks{tags="ci,linux"} 5
-
-  # Queue depth gauge
-  rentabot_reservation_queue_depth{priority="1"} 3
-
-  # Resource utilization
-  rentabot_resource_utilization_ratio 0.75
-  ```
-
-- **Metrics Tracked**:
-  - Lock acquisition rate
-  - Lock duration percentiles (p50, p95, p99)
-  - Queue wait time
-  - Resource utilization by tags
+### Prometheus Metrics
+- **Endpoint**: `GET /metrics`
+- **Metrics**:
+  - Active locks gauge by tags
+  - Lock duration histogram
+  - Reservation queue depth
+  - Resource utilization ratio
+  - Lock expiration rate
   - API request rate and latency
 
 ### API Enhancements
-- **Pagination**: `GET /api/v1/resources?page=1&limit=50`
-- **Filtering**: `GET /api/v1/resources?locked=true&tags=ci,linux`
-- **Sorting**: `GET /api/v1/resources?sort=name&order=asc`
-- **Partial Updates**: `PATCH /api/v1/resources/{id}` for metadata
-
-### Documentation & Polish
-- Comprehensive OpenAPI docs with examples
-- API versioning strategy documented
-- Deprecation policy (12 months notice for breaking changes)
-- Docker image published to Docker Hub
-- Kubernetes deployment manifests (Deployment, Service, Ingress)
-- Helm chart for easy installation
-
-### Performance
-- Benchmark tests (1000+ resources, 100+ concurrent locks)
-- Memory profiling and optimization
-- Connection pooling for database
-- Caching for frequently accessed resources
-
-**Success Criteria:**
-- Database persistence fully functional
-- Prometheus metrics integration tested
-- API supports pagination and filtering
-- Docker deployment verified
-- Performance benchmarks documented
-- v1.0.0 release candidate tested in production-like environment
+- Pagination: `?page=1&limit=50`
+- Advanced filtering: `?locked=true&tags=ci,linux&unavailable=false`
+- Sorting: `?sort=name&order=asc`
+- Expired locks endpoint: `GET /api/v1/resources/expired`
 
 ---
 
-## v1.0.0 Release Criteria
+## Future Considerations (v1.6+)
 
-### Feature Completeness
-- ✅ Basic resource CRUD
-- ✅ Lock/unlock with tokens
-- ✅ N-of-M allocation
-- ✅ Lock TTL and auto-expiration
-- ✅ Reservation queue with priority
-- ✅ Authentication and RBAC
-- ✅ Audit logging
-- ✅ Optional persistence
-- ✅ Prometheus metrics
+### Pending from Earlier Phases
+- ❌ Batch unlock endpoint
+- ❌ Priority-based reservation queue (currently FIFO only)
+- ❌ WebSocket notifications for reservations
+- ❌ Quantity parameter on direct lock endpoints
 
-### Production Readiness
-- ✅ Health check endpoints
-- ✅ Comprehensive error handling
-- ✅ Structured logging
-- ✅ API documentation (OpenAPI)
-- ✅ Container deployment (Docker)
-- ✅ Orchestration support (Kubernetes/Helm)
-- ✅ Performance benchmarks
-- ✅ Security best practices
-
-### Quality Assurance
-- ✅ >90% test coverage
-- ✅ Integration tests for all workflows
-- ✅ Load testing (sustained 100 req/s)
-- ✅ Security audit (dependency scanning)
-- ✅ Documentation review
-- ✅ Migration guide from v0.x
-
-### Community
-- ✅ Installation guide
-- ✅ Quick start tutorial
-- ✅ API client examples (Python, curl, Jenkins)
-- ✅ Troubleshooting guide
-- ✅ Contributing guidelines
-- ✅ Changelog following Keep a Changelog format
-
----
-
-## Post-1.0 Future Considerations
-
-### Advanced Features (v1.x)
-- Label expressions (complex tag matching with AND/OR/NOT)
-- Resource quantities (pool of N identical resources)
-- Maintenance windows (scheduled resource unavailability)
-- Resource health checks (periodic validation)
-- Multi-tenancy (namespace isolation)
-
-### Scalability (v2.0)
-- Distributed deployment (Redis or etcd backend)
-- Horizontal scaling (multiple instances)
-- Event streaming (Kafka/RabbitMQ integration)
-- GraphQL API alongside REST
+### Advanced Features
+- Docker image and Kubernetes manifests
+- Prometheus alerting rules
+- Resource health checks
+- Multi-resource group locking (named groups)
+- Scheduled maintenance windows
 
 ### Integrations
 - Jenkins Pipeline library
 - GitHub Actions workflow
 - GitLab CI/CD integration
-- Ansible module
-- Terraform provider
-- Resource maintenance hooks (notify on unavailability)
+- Webhook notifications
 
 ---
 
 ## Decision Log
 
-### Tag Separator: Space → Comma
-**Decision**: Migrate to comma-separated tags
-**Rationale**: Better querystring compatibility, maps directly to JSON arrays, industry standard
-**Timeline**: v0.4.0 with backward-compatible parser
+### Authentication Simplification
+**Decision**: Two-role model (admin + users) instead of complex RBAC
+**Rationale**: Simpler to implement and maintain, covers 95% of use cases
+**Status**: To be discussed and finalized
 
-### API Path Simplification
-**Decision**: `/api/v1/` instead of `/rentabot/api/v1.0/`
-**Rationale**: Shorter, more conventional, easier to type
-**Timeline**: v0.4.0 with redirect from old paths
+### Frontend Priority
+**Decision**: Focus on usability improvements before advanced features
+**Rationale**: Better UX improves adoption, real-time updates are critical
+**Target**: v1.1.0
 
-### Queue Priority Strategy
-**Decision**: Priority levels (1-10) with FIFO within priority
-**Rationale**: Matches industry standards (LAVA, Slurm), balances flexibility and simplicity
-**Timeline**: v0.7.0
-
-### Persistence Default
-**Decision**: In-memory default, optional SQLite
-**Rationale**: Maintains simplicity for development/testing, allows production persistence
-**Timeline**: v0.9.0
-
-### Authentication Approach
-**Decision**: API key primary, JWT optional
-**Rationale**: API keys simpler for automation, JWT for browser/advanced scenarios
-**Timeline**: v0.8.0
-
----
-
-## Version Numbering
-
-Following Semantic Versioning (SemVer 2.0):
-- **Major (v1.0)**: Breaking changes, API incompatibility
-- **Minor (v1.1)**: New features, backward compatible
-- **Patch (v1.0.1)**: Bug fixes, no new features
-
-Pre-1.0 versions (v0.x) may include breaking changes in minor versions.
+### Persistence Timing
+**Decision**: Defer to v1.4.0 (after auth and frontend)
+**Rationale**: In-memory sufficient for current use cases, focus on features first
+**Rationale**: In-memory sufficient for current use cases, focus on features first
 
 ---
 
 ## Contributing to This Roadmap
 
-This roadmap is a living document. Feedback welcome via GitHub issues:
-- Feature requests: Tag with `enhancement`
-- Priority disputes: Tag with `roadmap-discussion`
-- Timeline concerns: Tag with `planning`
+This roadmap is a living document. Priorities may shift based on:
+- User feedback and feature requests
+- Production deployment needs
+- Security or performance issues
+
+Feedback welcome via GitHub issues with tags:
+- `enhancement` - Feature requests
+- `roadmap-discussion` - Priority or timeline concerns
+
+---
+
+**Last Updated:** 31 January 2026
+**Current Version:** v1.0.0
+**Next Release:** v1.1.0 (February 2026)
 
 Last Updated: 28 January 2026
