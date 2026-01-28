@@ -40,3 +40,12 @@
   - `fix(controllers): handle edge case in resource locking`
   - `docs: update README with new API paths`
   - `chore: add pre-commit hook for formatting`
+
+## Release process
+- Verify that all tests pass: `uv run pytest tests/`
+- Verify the README.md reflects the new version and changes.
+- Verify the commands provided in README.md work as expected.
+- Bump version in `setup.cfg` and `CHANGELOG.md`
+- Commit changes with message: `chore(release): bump version to x.y.z`
+- Tag the commit: `git tag vx.y.z`
+- Push changes and tags: `git push origin main --tags`
