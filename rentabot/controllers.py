@@ -666,29 +666,30 @@ async def list_reservations() -> list[Reservation]:
     Returns:
         List of all reservations with positions computed for pending ones.
     """
+    # Take snapshot under lock
     async with reservation_lock:
         reservations = list(reservations_by_id.values())
 
-        # Compute positions for pending reservations
-        pending = [r for r in reservations if r.status == "pending"]
-        pending.sort(key=lambda r: r.created_at)
+    # Compute positions outside lock (CPU-intensive work)
+    pending = [r for r in reservations if r.status == "pending"]
+    pending.sort(key=lambda r: r.created_at)
 
-        result = []
-        for reservation in reservations:
-            if reservation.status == "pending":
-                position = next(
-                    (
-                        i + 1
-                        for i, r in enumerate(pending)
-                        if r.reservation_id == reservation.reservation_id
-                    ),
-                    None,
-                )
-                result.append(reservation.model_copy(update={"position_in_queue": position}))
-            else:
-                result.append(reservation)
+    result = []
+    for reservation in reservations:
+        if reservation.status == "pending":
+            position = next(
+                (
+                    i + 1
+                    for i, r in enumerate(pending)
+                    if r.reservation_id == reservation.reservation_id
+                ),
+                None,
+            )
+            result.append(reservation.model_copy(update={"position_in_queue": position}))
+        else:
+            result.append(reservation)
 
-        return result
+    return result
 
 
 async def auto_fulfill_reservations() -> None:
