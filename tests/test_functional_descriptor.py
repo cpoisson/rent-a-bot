@@ -57,7 +57,7 @@ class TestInitResourcesFromDescriptor:
             input_resources = yaml.load(f, Loader=yaml.SafeLoader)
 
         # Request the available resources
-        response = app.get("/rentabot/api/v1.0/resources")
+        response = app.get("/api/v1/resources")
 
         # Should be a 200 OK
         if response.status_code != 200:

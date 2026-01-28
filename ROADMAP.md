@@ -15,88 +15,82 @@ Rent-A-Bot aims to be a lightweight, platform-agnostic alternative to Jenkins Lo
 
 ---
 
-## Phase 1 - Breaking Changes & Foundation (v0.4.0)
+## Phase 1 - Breaking Changes & Foundation (v0.4.0) ✅ COMPLETED
 
-**Target:** Early Q1 2026
+**Target:** Early Q1 2026 | **Completed:** January 2026
 
 ### Breaking Changes
-- **Tag Separator Migration**: Change from space-separated (`"ci linux x86"`) to comma-separated (`"ci,linux,x86"`)
+- ✅ **Tag Separator Migration**: Change from space-separated (`"ci linux x86"`) to comma-separated (`"ci,linux,x86"`)
   - Update `Resource.tags` parsing in `controllers.py`
   - Maintain backward-compatible parser during transition
   - Update example resource descriptor files
 
-- **API Path Simplification**: Shorten from `/rentabot/api/v1.0/` to `/api/v1/`
+- ✅ **API Path Simplification**: Shorten from `/rentabot/api/v1.0/` to `/api/v1/`
   - More concise and industry-standard
   - Update all endpoint definitions in `main.py`
   - Add redirect from old paths for migration period
 
 ### Foundation Improvements
-- Fix Python version requirement to `>=3.9` in `pyproject.toml`
-- Add `/health` endpoint for monitoring (200 OK if service running)
-- Add `/readiness` endpoint for Kubernetes health checks
-- Consolidate exception handlers following DRY principles
-- Replace custom `model_dump_json()` with Pydantic's `model_dump()`
+- ✅ Fix Python version requirement to `>=3.10` in `pyproject.toml`
+- ✅ Add `/health` endpoint for monitoring (200 OK if service running)
+- ✅ Add `/readiness` endpoint for Kubernetes health checks
+- ✅ Consolidate exception handlers following DRY principles
+- ✅ Replace custom `model_dump_json()` with Pydantic's `model_dump()`
 
 ### Documentation
-- Create migration guide for descriptor format changes
-- Update README with new API paths
-- Add examples for comma-separated tags
+- ✅ Create migration guide for descriptor format changes
+- ✅ Update README with new API paths
+- ✅ Add examples for comma-separated tags
 
 **Success Criteria:**
-- All tests pass with new tag format
-- API documentation reflects simplified paths
-- Health endpoints return appropriate status codes
+- ✅ All tests pass with new tag format
+- ✅ API documentation reflects simplified paths
+- ✅ Health endpoints return appropriate status codes
 
 ---
 
-## Phase 2 - N-of-M Resource Allocation (v0.5.0)
+## Phase 2 - N-of-M Resource Allocation (v0.5.0) 🟡 IN PROGRESS
 
-**Target:** Mid Q1 2026
+**Target:** Mid Q1 2026 | **Status:** Core features completed via reservations
 
 ### Core Features
-- **Multi-Resource Lock Endpoint**: `POST /api/v1/resources/lock`
-  ```json
-  {
-    "tags": ["ci", "linux"],
-    "quantity": 2,
-    "ttl": 3600
-  }
-  ```
-  - Returns array of lock tokens: `{"lock_tokens": ["uuid1", "uuid2"], "resources": [...]}`
-  - Implements atomic locking with automatic rollback on partial failure
-  - All resources locked or none (transaction-style)
+- ✅ **Multi-Resource Lock Endpoint**: Implemented via reservations (see Phase 4)
+  - Atomic multi-resource locking with automatic rollback
+  - Transaction-style all-or-nothing allocation
+  - Note: Direct `POST /api/v1/resources/lock` with quantity parameter not yet implemented
 
-- **Batch Unlock Endpoint**: `POST /api/v1/resources/unlock-batch`
+- ❌ **Batch Unlock Endpoint**: `POST /api/v1/resources/unlock-batch`
   ```json
   {
     "lock_tokens": ["uuid1", "uuid2"]
   }
   ```
+  - Status: Not yet implemented (can unlock individually)
 
 ### Implementation Details
-- Extend `lock_resource()` to support quantity parameter
-- Implement atomic multi-resource locking using existing `resource_lock`
-- Add validation to ensure sufficient available resources before locking
-- Update web UI to show resource groups and multi-locks
+- ❌ Extend `lock_resource()` to support quantity parameter (not on direct lock endpoint yet)
+- ✅ Implement atomic multi-resource locking using existing `resource_lock` (via reservations)
+- ✅ Add validation to ensure sufficient available resources before locking
+- ❌ Update web UI to show resource groups and multi-locks
 
 ### API Changes
-- Add `quantity` parameter to existing lock endpoints (default: 1)
-- Maintain backward compatibility with single-resource locks
-- Enhance error messages for insufficient resources
+- ❌ Add `quantity` parameter to existing lock endpoints (default: 1)
+- ✅ Maintain backward compatibility with single-resource locks
+- ✅ Enhance error messages for insufficient resources
 
 **Success Criteria:**
-- Can successfully lock/unlock N resources in single operation
-- Partial failures result in complete rollback
-- Web UI displays grouped resource allocations
-- Test coverage includes edge cases (insufficient resources, partial availability)
+- ✅ Can successfully lock/unlock N resources in single operation (via reservations)
+- ✅ Partial failures result in complete rollback
+- ❌ Web UI displays grouped resource allocations
+- ✅ Test coverage includes edge cases (insufficient resources, partial availability)
 
 ---
 
-## Phase 3 - Lock Timeout & Auto-Expiration (v0.6.0)
+## Phase 3 - Lock Timeout & Auto-Expiration (v0.6.0) 🟡 IN PROGRESS
 
-**Target:** Late Q1 2026
+**Target:** Late Q1 2026 | **Status:** Core TTL features completed
 
-### Data Model Extensions
+### Data Model Extensions ✅ COMPLETED
 ```python
 class Resource(BaseModel):
     # ... existing fields ...
@@ -106,106 +100,179 @@ class Resource(BaseModel):
 ```
 
 ### Core Features
-- **TTL Support on Lock Requests**: Optional `ttl` parameter (seconds)
-  - Configurable default via CLI: `--default-lock-ttl 1800`
+- ✅ **TTL Support on Lock Requests**: Optional `ttl` parameter (seconds)
+  - Configurable default (3600s)
   - Per-resource max TTL limit
   - Validates requested TTL against max allowed
 
-- **Automatic Expiration**: Background asyncio task
+- ✅ **Automatic Expiration**: Background asyncio task
   - Runs every 10 seconds
   - Scans all locked resources for expired locks
   - Auto-unlocks with details: `"Auto-expired at {timestamp}"`
   - Logs expiration events for audit trail
 
-- **Monitoring Endpoints**:
-  - `GET /api/v1/resources/expired` - List recently expired locks
-  - Include expiration time in resource detail responses
-  - Add warning period (5 min before expiration)
+- ✅ **Lock Extension**: `POST /api/v1/resources/{id}/extend`
+  - Extend lock duration before expiration
+  - Validates extension against max duration
+
+- ❌ **Monitoring Endpoints**:
+  - `GET /api/v1/resources/expired` - List recently expired locks (not implemented)
+  - ✅ Include expiration time in resource detail responses
+  - ❌ Add warning period (5 min before expiration)
 
 ### Implementation Details
-- Background task starts with FastAPI lifespan event
-- Graceful handling of timezone-aware datetimes
-- Update web UI to show:
-  - Time remaining for locked resources
-  - Warning indicator when < 5 minutes remain
-  - Auto-refresh every 10 seconds
+- ✅ Background task starts with FastAPI lifespan event
+- ✅ Graceful handling of timezone-aware datetimes
+- ❌ Update web UI to show:
+  - ❌ Time remaining for locked resources
+  - ❌ Warning indicator when < 5 minutes remain
+  - ❌ Auto-refresh every 10 seconds
 
 **Success Criteria:**
-- Locks automatically expire after TTL
-- Background task doesn't block main event loop
-- Web UI shows countdown timer
-- Expired locks are logged with timestamp and original requester
+- ✅ Locks automatically expire after TTL
+- ✅ Background task doesn't block main event loop
+- ❌ Web UI shows countdown timer
+- ✅ Expired locks are logged with timestamp and original requester
 
 ---
 
-## Phase 4 - Smart Reservation Queue (v0.7.0)
+## Phase 4 - Smart Reservation Queue (v0.7.0) 🟡 IN PROGRESS
 
-**Target:** Early Q2 2026
+**Target:** Early Q2 2026 | **Status:** FIFO queue completed, priority/WebSocket pending
 
-### Data Model
+### Data Model ✅ COMPLETED (FIFO only)
 ```python
 class Reservation(BaseModel):
     id: str  # UUID
     tags: list[str]
     quantity: int
-    priority: int = 5  # 1 (highest) to 10 (lowest), default: 5
+    # priority: int = 5  # NOT YET IMPLEMENTED - currently pure FIFO
     client_id: str
     created_at: datetime
     expires_at: datetime  # reservation itself expires
-    status: str  # "pending", "fulfilled", "cancelled", "expired"
+    status: str  # "pending", "fulfilled", "cancelled", "expired", "claimed"
+    ttl: int  # lock TTL when fulfilled
 ```
 
 ### Core Features
-- **Create Reservation**: `POST /api/v1/reservations`
+- ✅ **Create Reservation**: `POST /api/v1/reservations`
   ```json
   {
     "tags": ["ci", "linux"],
     "quantity": 2,
-    "priority": 3,
-    "max_wait_time": 1800,  // seconds
+    "ttl": 3600,
     "client_id": "jenkins-build-123"
   }
   ```
   - Returns reservation ID for tracking
   - Queues if resources not immediately available
+  - Note: `priority` parameter not yet supported
 
-- **Real-Time Notifications**:
-  - WebSocket endpoint: `GET /ws/reservations/{reservation_id}`
-  - Sends message when resources allocated
-  - Client has 60 seconds to claim or reservation expires
+- ❌ **Real-Time Notifications**: Not yet implemented
+  - WebSocket endpoint: `GET /ws/reservations/{reservation_id}` (planned)
+  - Would send message when resources allocated
+  - Client must poll status endpoint currently
 
-- **Queue Management**:
-  - `GET /api/v1/reservations` - List all reservations (paginated)
-  - `GET /api/v1/reservations/{id}` - Check reservation status
-  - `DELETE /api/v1/reservations/{id}` - Cancel reservation
+- ✅ **Queue Management**:
+  - ✅ `GET /api/v1/reservations` - List all reservations
+  - ✅ `GET /api/v1/reservations/{id}` - Check reservation status
+  - ✅ `DELETE /api/v1/reservations/{id}` - Cancel reservation
+  - ✅ `POST /api/v1/reservations/{id}/claim` - Claim fulfilled reservation
 
 ### Implementation Details
-- **Auto-Fulfillment Task**: Background process
-  - Triggered when resources unlock
+- ✅ **Auto-Fulfillment Task**: Background process
+  - Runs every 10 seconds
   - Matches freed resources to pending reservations
-  - Sorts by priority (asc), then created_at (FIFO within priority)
+  - ✅ Currently: strict FIFO by created_at
+  - ❌ Priority sorting not yet implemented
   - Reserves resources for 60 seconds for claiming
+  - Atomic multi-resource locking with rollback
 
-- **Queue Strategy**: Priority + FIFO (matches LAVA/Slurm model)
-  - Priority 1-10 (1 = highest)
-  - Within same priority: strict FIFO
-  - Prevents starvation with aging mechanism (optional)
+- ❌ **Queue Strategy**: Priority + FIFO (matches LAVA/Slurm model)
+  - ❌ Priority 1-10 (1 = highest) - not implemented
+  - ✅ Currently: pure FIFO queue
+  - ❌ Aging mechanism not implemented
 
-- **Reservation Cleanup**:
+- ✅ **Reservation Cleanup**:
   - Unclaimed fulfilled reservations expire after 60s
-  - Pending reservations expire after max_wait_time
-  - Background task removes expired reservations
+  - Background task removes expired/cancelled reservations
+  - Atomic cleanup prevents race conditions
 
 **Success Criteria:**
-- Reservations automatically fulfilled when resources available
-- WebSocket notifies clients in real-time
-- Higher priority reservations served first
-- Same-priority reservations served FIFO
-- Abandoned reservations cleaned up automatically
+- ✅ Reservations automatically fulfilled when resources available
+- ❌ WebSocket notifies clients in real-time (polling required currently)
+- ❌ Higher priority reservations served first (no priority support yet)
+- ✅ Reservations served FIFO (strict order by created_at)
+- ✅ Abandoned reservations cleaned up automatically
 
 ---
 
-## Phase 5 - Authentication & Audit Logging (v0.8.0)
+## Phase 5 - Resource Maintenance & Unavailability (v0.5.0)
+
+**Target:** Q1 2026
+
+### Data Model Extensions
+```python
+class Resource(BaseModel):
+    # ... existing fields ...
+    unavailable: bool = False
+    unavailable_reason: str | None = None  # e.g., "Hardware maintenance", "Network upgrade"
+    unavailable_since: datetime | None = None
+    unavailable_until: datetime | None = None  # Optional scheduled end time
+```
+
+### Core Features
+- **Mark Resource Unavailable**: `POST /api/v1/resources/{id}/unavailable`
+  ```json
+  {
+    "reason": "Hardware maintenance - replacing disk",
+    "until": "2026-02-01T14:00:00Z"  // optional
+  }
+  ```
+  - Requires maintainer/admin role (when auth implemented)
+  - Prevents new locks and reservations
+  - Does NOT unlock currently held locks (those expire normally)
+  - Optional scheduled end time for automatic re-enablement
+
+- **Mark Resource Available**: `POST /api/v1/resources/{id}/available`
+  - Clears unavailable flag and reason
+  - Resource becomes available for locking/reservations
+
+- **Filter Unavailable Resources**:
+  - `GET /api/v1/resources?available=true` - Show only available resources
+  - `GET /api/v1/resources?unavailable=true` - Show only unavailable resources
+  - Default behavior: show all resources with `unavailable` field
+
+### Implementation Details
+- ✅ Validation in lock endpoints: reject locks on unavailable resources
+- ✅ Reservation matching: skip unavailable resources when fulfilling
+- ❌ Background task: auto re-enable resources when `unavailable_until` passes
+- ❌ Web UI: visual indicator for unavailable resources (gray out, badge)
+- ✅ API response: include unavailability info in resource details
+
+### Integration Points
+- **With Locks**: Unavailable resources cannot be locked (409 Conflict)
+- **With Reservations**: Unavailable resources excluded from matching pool
+- **With Expiration**: Existing locks expire normally, resource stays unavailable
+- **With Authentication** (Phase 6): Only admins/maintainers can toggle unavailability
+
+### Use Cases
+- CI infrastructure maintenance windows
+- Hardware failures requiring repair
+- Network upgrades or reconfiguration
+- Resource decommissioning before removal
+- Testing/debugging specific resources
+
+**Success Criteria:**
+- ❌ Resources can be marked unavailable with reason
+- ❌ Unavailable resources rejected from lock operations
+- ❌ Reservations skip unavailable resources
+- ❌ Scheduled maintenance windows supported
+- ❌ Web UI shows maintenance status clearly
+
+---
+
+## Phase 6 - Authentication & Audit Logging (v0.8.0)
 
 **Target:** Mid Q2 2026
 
@@ -263,7 +330,7 @@ class AuditLog(BaseModel):
 
 ---
 
-## Phase 6 - Persistence, Metrics & v1.0 Polish (v0.9.0 → v1.0.0)
+## Phase 7 - Persistence, Metrics & v1.0 Polish (v0.9.0 → v1.0.0)
 
 **Target:** Late Q2 2026
 
@@ -398,6 +465,7 @@ class AuditLog(BaseModel):
 - GitLab CI/CD integration
 - Ansible module
 - Terraform provider
+- Resource maintenance hooks (notify on unavailability)
 
 ---
 
@@ -448,4 +516,4 @@ This roadmap is a living document. Feedback welcome via GitHub issues:
 - Priority disputes: Tag with `roadmap-discussion`
 - Timeline concerns: Tag with `planning`
 
-Last Updated: 28 December 2025
+Last Updated: 28 January 2026

@@ -6,10 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Removed
+- **BREAKING**: Removed legacy `/rentabot/api/v1.0/` API endpoints - use `/api/v1/` instead
+- Removed legacy API deprecation middleware and redirect functionality
+- Removed `RENTABOT_LEGACY_REDIRECT` environment variable support
+
 ### Added
 - Simplified API endpoints under `/api/v1/` path (new standard)
-- Legacy API path deprecation middleware with optional redirect via `RENTABOT_LEGACY_REDIRECT` env var
-- Deprecation headers (`Deprecation: true`, `Link: <alternate>`) on legacy `/rentabot/api/v1.0/` endpoints
 - Pre-commit hook for automatic code formatting and linting with ruff
 - `/health` endpoint for basic service monitoring and uptime checks
 - `/readiness` endpoint for Kubernetes readiness probes
