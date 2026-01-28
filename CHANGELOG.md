@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+---
+
+## [1.0.0] - 2026-01-31
+
+**First stable release! 🎉**
+
+This major release marks Rent-A-Bot as production-ready with a complete feature set for resource locking, TTL management, and intelligent reservation queuing.
+
 ### Removed
 - **BREAKING**: Removed legacy `/rentabot/api/v1.0/` API endpoints - use `/api/v1/` instead
 - Removed legacy API deprecation middleware and redirect functionality
@@ -56,9 +64,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Now validates that sufficient resources can accommodate requested TTL before creating reservation
   - Provides clear error message when TTL exceeds `max_lock_duration` for available resources
   - Prevents reservations from staying "pending" indefinitely due to TTL constraints
-
-### Deprecated
-- Legacy `/rentabot/api/v1.0/` endpoints (will be removed in v1.0.0)
 
 ---
 
