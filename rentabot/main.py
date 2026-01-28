@@ -19,15 +19,22 @@ from pydantic import BaseModel, ConfigDict, Field
 from rentabot import __version__
 from rentabot.controllers import (
     auto_expire_locks,
+    auto_fulfill_reservations,
+    cancel_reservation,
+    claim_reservation,
+    create_reservation,
     extend_resource_lock,
     get_all_resources,
+    get_reservation,
     get_resource_from_id,
     get_resources_from_tags,
+    list_reservations,
     lock_resource,
     populate_database_from_file,
     unlock_resource,
 )
 from rentabot.exceptions import (
+    ReservationException,
     ResourceAlreadyLocked,
     ResourceException,
     ResourceNotFound,
@@ -50,18 +57,26 @@ async def lifespan(app: FastAPI):
             "No RENTABOT_RESOURCE_DESCRIPTOR environment variable set, starting with empty resources"
         )
 
-    # Start background task for auto-expiring locks
+    # Start background tasks
     expire_task = asyncio.create_task(auto_expire_locks())
     logger.info("Started auto-expire locks background task")
 
+    fulfill_task = asyncio.create_task(auto_fulfill_reservations())
+    logger.info("Started auto-fulfill reservations background task")
+
     yield
 
-    # Shutdown - cancel background task
+    # Shutdown - cancel background tasks
     expire_task.cancel()
+    fulfill_task.cancel()
     try:
         await expire_task
     except asyncio.CancelledError:
         logger.info("Auto-expire locks task cancelled")
+    try:
+        await fulfill_task
+    except asyncio.CancelledError:
+        logger.info("Auto-fulfill reservations task cancelled")
 
 
 # Create FastAPI app
@@ -178,6 +193,34 @@ class ExtendResponse(BaseModel):
     total_lock_duration: int = Field(alias="total-lock-duration")
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+# Reservation models
+class CreateReservationRequest(BaseModel):
+    tags: list[str] = Field(..., min_length=1)
+    quantity: int = Field(gt=0)
+    max_wait_time: Optional[int] = Field(default=3600, gt=0)
+    ttl: Optional[int] = Field(default=3600, gt=0)
+
+
+class ReservationResponse(BaseModel):
+    reservation_id: str
+    status: str
+    tags: list[str]
+    quantity: int
+    ttl: int
+    position_in_queue: Optional[int] = None
+    created_at: datetime
+    expires_at: datetime
+    fulfilled_at: Optional[datetime] = None
+    claim_expires_at: Optional[datetime] = None
+    claimed_at: Optional[datetime] = None
+    resource_ids: list[int] = []
+    lock_tokens: list[str] = []
+
+
+class ReservationsListResponse(BaseModel):
+    reservations: list[ReservationResponse]
 
 
 # - [ Web View ] --------------------------------------------------------------
@@ -343,3 +386,57 @@ async def resource_exception_handler(request: Request, exc: ResourceException):
     Handles: ResourceNotFound, ResourceAlreadyLocked, ResourceAlreadyUnlocked, InvalidLockToken, InvalidTTL
     """
     return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
+
+
+@app.exception_handler(ReservationException)
+async def reservation_exception_handler(request: Request, exc: ReservationException):
+    """
+    Consolidated exception handler for all ReservationException subclasses.
+
+    Handles: ReservationNotFound, ReservationNotFulfilled, ReservationClaimExpired,
+             InsufficientResources, ReservationCannotBeCancelled, InvalidReservationTags
+    """
+    return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
+
+
+# - [ API : Reservations ] --------------------------------------------------
+
+
+@app.post("/api/v1/reservations", response_model=ReservationResponse, status_code=201)
+async def create_new_reservation(req: CreateReservationRequest):
+    """Create a new resource reservation."""
+    reservation = await create_reservation(
+        tags=req.tags,
+        quantity=req.quantity,
+        max_wait_time=req.max_wait_time or 3600,
+        ttl=req.ttl or 3600,
+    )
+    return reservation.model_dump()
+
+
+@app.get("/api/v1/reservations/{reservation_id}", response_model=ReservationResponse)
+async def get_reservation_status(reservation_id: str):
+    """Get reservation status by ID."""
+    reservation = await get_reservation(reservation_id)
+    return reservation.model_dump()
+
+
+@app.post("/api/v1/reservations/{reservation_id}/claim", response_model=ReservationResponse)
+async def claim_reservation_endpoint(reservation_id: str):
+    """Claim a fulfilled reservation."""
+    reservation = await claim_reservation(reservation_id)
+    return reservation.model_dump()
+
+
+@app.delete("/api/v1/reservations/{reservation_id}", status_code=204)
+async def cancel_reservation_endpoint(reservation_id: str):
+    """Cancel a pending reservation."""
+    await cancel_reservation(reservation_id)
+    return None
+
+
+@app.get("/api/v1/reservations", response_model=ReservationsListResponse)
+async def list_all_reservations():
+    """List all active reservations."""
+    reservations = await list_reservations()
+    return {"reservations": [r.model_dump() for r in reservations]}

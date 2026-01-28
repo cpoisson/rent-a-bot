@@ -75,6 +75,84 @@ class InvalidTTL(ResourceException):
         ResourceException.__init__(self, *argv, **kwargs)
 
 
+# - [ Reservation Exception ] ------------------------------------------------
+
+
+class ReservationException(Exception):
+    """Base Reservation Exception."""
+
+    status_code = 400  # Bad Request
+
+    def __init__(self, message=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        self.payload = payload
+
+    def __str__(self):
+        """Return string representation of the exception."""
+        return self.message or ""
+
+    def to_dict(self):
+        """Serialize exception to dictionary."""
+        rv = dict(self.payload or ())
+        rv["message"] = self.message
+        return rv
+
+
+class ReservationNotFound(ReservationException):
+    """Raised when a reservation is not found."""
+
+    status_code = 404  # Not Found
+
+    def __init__(self, *argv, **kwargs):
+        ReservationException.__init__(self, *argv, **kwargs)
+
+
+class ReservationNotFulfilled(ReservationException):
+    """Raised when trying to claim a reservation that isn't fulfilled yet."""
+
+    status_code = 409  # Conflict
+
+    def __init__(self, *argv, **kwargs):
+        ReservationException.__init__(self, *argv, **kwargs)
+
+
+class ReservationClaimExpired(ReservationException):
+    """Raised when claim window has expired."""
+
+    status_code = 410  # Gone
+
+    def __init__(self, *argv, **kwargs):
+        ReservationException.__init__(self, *argv, **kwargs)
+
+
+class InsufficientResources(ReservationException):
+    """Raised when not enough resources are available."""
+
+    status_code = 409  # Conflict
+
+    def __init__(self, *argv, **kwargs):
+        ReservationException.__init__(self, *argv, **kwargs)
+
+
+class ReservationCannotBeCancelled(ReservationException):
+    """Raised when trying to cancel a fulfilled/claimed reservation."""
+
+    status_code = 409  # Conflict
+
+    def __init__(self, *argv, **kwargs):
+        ReservationException.__init__(self, *argv, **kwargs)
+
+
+class InvalidReservationTags(ReservationException):
+    """Raised when reservation tags validation fails."""
+
+    status_code = 400  # Bad Request
+
+    def __init__(self, *argv, **kwargs):
+        ReservationException.__init__(self, *argv, **kwargs)
+
+
 # - [ Resource Descriptor Exception ] ----------------------------------------
 
 
