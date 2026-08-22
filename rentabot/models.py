@@ -26,6 +26,8 @@ class Resource(BaseModel):
     lock_acquired_at: datetime | None = Field(default=None, alias="lock-acquired-at")
     lock_expires_at: datetime | None = Field(default=None, alias="lock-expires-at")
     max_lock_duration: int = Field(default=86400, alias="max-lock-duration")  # 24 hours default
+    locked_by_label: str | None = None
+    locked_by_ip: str | None = None
 
 
 class Reservation(BaseModel):
