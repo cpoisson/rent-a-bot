@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Correct Python code block formatting in ROADMAP.md to pass the CI formatting check.
+
 ### Added
 - Lock endpoints now accept `locked_by_label` and `locked_by_ip`, and persist lock metadata (IP falls back to `request.client.host`)
 
