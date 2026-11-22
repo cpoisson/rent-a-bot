@@ -38,7 +38,7 @@ The following features are planned for upcoming releases. This roadmap focuses o
   class Resource(BaseModel):
       # ... existing fields ...
       locked_by_label: str | None = None  # e.g., "jenkins-job-123", "user@example.com"
-      locked_by_ip: str | None = None     # IP address of lock requester
+      locked_by_ip: str | None = None  # IP address of lock requester
   ```
   - Track who/what locked the resource (human-readable label)
   - Record IP address of lock operation
