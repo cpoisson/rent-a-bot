@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Lock endpoints now accept `locked_by_label` and `locked_by_ip`, and persist lock metadata (IP falls back to `request.client.host`)
+
 ---
 
 ## [1.0.0] - 2026-01-31
